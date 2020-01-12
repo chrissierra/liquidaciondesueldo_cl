@@ -12,7 +12,16 @@
 */
 
 Route::get('/', function () {
-    return view('welcome');
+	//parametros_desde_bbdd
+
+	$mes = date("n");
+
+    return view('liquidoabase')
+    ->with("parametros_desde_bbdd", App\table_parametro::All())
+	    ->with("afps", App\afp::where('mes', $mes)
+	    ->select('Provida', 'Capital', 'Cuprum', 'PlanVital', 'Uno', 'IPS', 'Modelo', 'Habitat')
+	    ->first()->toJson()
+	);
 });
 
 

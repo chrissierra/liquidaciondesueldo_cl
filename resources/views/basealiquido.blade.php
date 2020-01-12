@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link href="https://fonts.googleapis.com/css?family=Roboto+Mono|Roboto:400,700,900&display=swap" rel="stylesheet">
-        <title>Laravel</title>
+        <title>Liquidacion de sueldo</title>
         <link rel="stylesheet" href="{{ URL::asset('css/app.css') }}">
 
         <!-- Fonts -->
