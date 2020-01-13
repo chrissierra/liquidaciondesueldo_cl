@@ -2683,6 +2683,7 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
       totalNoImponible: 0,
       sueldoLiquidoPactado: 0,
       cargas: 0,
+      Tramocargas: 0,
       gratificacionLegal: 1,
       SaludSeleccionada: 'Fonasa',
       PrevisionSeleccionada: 0,
@@ -2701,15 +2702,6 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
       var _this = this;
 
       e.preventDefault();
-      /*
-      if( (totalImponible/1.25) * 0.25 > 119146){
-        this.sueldoBase = totalImponible - 119146;
-        this.montoGratificacionLegal = 119146;
-      }else{
-        this.sueldoBase = totalImponible /1.25;
-        this.montoGratificacionLegal = totalImponible * 0.25;
-       }*/
-
       axios.post('api/ImpuestosDelMes', {
         mes: 1,
         anio: 2020
@@ -2717,20 +2709,41 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
         crossdomain: true
       }).then(function (response) {
         var cesantia = _this.TipoContrato === 2 ? 0 : 0.006;
-        var coficienteUniversal = 1 - (_this.PrevisionSeleccionada / 100 + 0.07 + cesantia);
+        var coficienteUniversal = 1 - (_this.PrevisionSeleccionada / 100 + 0.07);
         var coficienteAFPISAPRE = 1 - (_this.PrevisionSeleccionada / 100 + 0.07);
+        var coef_afp = 1 - _this.PrevisionSeleccionada / 100;
+        var coef_isapre = 1 - 0.07;
         var tributable = _this.sueldoLiquidoPactado - _this.totalNoImponible;
         coficienteUniversal = coficienteAFPISAPRE + cesantia;
         var descuentosAfpIsapre = tributable / coficienteUniversal * (1 - coficienteAFPISAPRE);
+        var descuento_afp = tributable / coficienteUniversal * (1 - coef_afp);
+        var descuentosIsapre = tributable / coficienteUniversal * (1 - coef_isapre);
         var descuentosCesantia = tributable / coficienteUniversal * cesantia;
-        var totalImponible = tributable + descuentosCesantia + descuentosAfpIsapre;
+
+        _this.analizarSiFun(descuentosIsapre);
+
+        var totalImponible = tributable + _this.diferencia_salud;
         _this.impuestos = response.data;
 
         _this.desdeBaseDarLiquidoDefinito(totalImponible, coficienteAFPISAPRE, cesantia, _this.sueldoLiquidoPactado, coficienteAFPISAPRE + cesantia, _this.PrevisionSeleccionada / 100, 0.07, _this.Parametros);
       });
     },
-    eleccionSalud: function eleccionSalud(e) {},
-    eleccionPrevision: function eleccionPrevision() {},
+    analizarSiFun: function analizarSiFun(descuentosIsapre_en_funcion) {
+      if (this.fun > 0) {
+        var saludFun = parseFloat(this.Parametros.UF * this.fun);
+
+        if (saludFun > descuentosIsapre_en_funcion) {
+          this.MontoSaludDefinitivo = saludFun;
+          this.diferencia_salud = Math.abs(saludFun - descuentosIsapre_en_funcion) * 1;
+        } else {
+          this.MontoSaludDefinitivo = descuentosIsapre_en_funcion;
+          this.diferencia_salud = 0;
+        }
+      } else {
+        this.MontoSaludDefinitivo = descuentosIsapre_en_funcion;
+        this.diferencia_salud = 0;
+      }
+    },
     json2array: function json2array(json) {
       var result = [];
       Object.entries(json).forEach(function (_ref) {
@@ -2738,9 +2751,6 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
             key = _ref2[0],
             value = _ref2[1];
 
-        /*let rObj = {}
-        rObj[key] = value;
-        result.push(rObj) */
         result.push({
           nombre_afp: key,
           comision: value
@@ -2748,9 +2758,32 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
       });
       return result;
     },
+    asignarCargas: function asignarCargas() {
+      var montoPorCargas = 0;
+      console.log("this.Tramocargas", this.Tramocargas);
+      this.cargas = this.cargas * 1;
+      console.log("this.cargas", this.cargas);
+
+      if (this.Tramocargas == 1) {
+        console.log("this.Parametros.AsignFamA ", this.Parametros.AsignFamA);
+        montoPorCargas = this.Parametros.AsigFamA * this.cargas;
+      } else if (this.Tramocargas == 2) {
+        console.log("this.Parametros.AsignFamA ", this.Parametros.AsignFamB);
+        montoPorCargas = this.Parametros.AsigFamB * this.cargas;
+      } else if (this.Tramocargas == 3) {
+        console.log("this.Parametros.AsignFamA ", this.Parametros.AsignFamC);
+        montoPorCargas = this.Parametros.AsigFamC * this.cargas;
+      } else {
+        montoPorCargas = 0;
+      }
+
+      console.log("montoPorCargas", montoPorCargas);
+      return montoPorCargas;
+    },
     desdeBaseDarLiquidoDefinito: function desdeBaseDarLiquidoDefinito(imponible_preliminar, coef_afpsalud, coef_cesantia, LiqPactado, coef_universal, afp, salud, parametros) {
       var _this2 = this;
 
+      console.log("imponible_preliminar en desdebasedarliquido *****", imponible_preliminar);
       if (this.impuestos[0].desde > imponible_preliminar) return this.porFormula(0.07, afp, coef_cesantia, 0, 0, LiqPactado, coef_afpsalud, parametros, coef_universal);
       this.impuestos.forEach(function (value) {
         if (imponible_preliminar > value.desde && imponible_preliminar < value.hasta) {
@@ -2759,35 +2792,54 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
       });
     },
     // Fin desdebasedarliquidodefinito
-    gradienteAscedenteSueldo: function gradienteAscedenteSueldo(imponible_preliminar, coef_afpsalud, coef_cesantia, LiqPactado, impuesto) {
-      var descuentos_afpsalud = imponible_preliminar * (1 - coef_afpsalud);
-      var descuentos_cesantia = imponible_preliminar * coef_cesantia;
-      var tributable = imponible_preliminar - (descuentos_cesantia + descuentos_afpsalud);
-      var impuesto_a_rebajar = tributable * impuesto.factor - impuesto.cantidadRebajar;
-      var liquido_calculado = tributable - impuesto_a_rebajar;
-      return liquido_calculado;
-    },
     porFormula: function porFormula(salud, afp, cesantiaFactor, factor, descontar, liquido, coefAFPISAPRE, Parametros, coef_universal) {
       var limiteAFPSALUD = 2242147;
       var limiteCesantia = 3366052;
-      var parteArriba = liquido - descontar;
-      var parteAbajo = 1 - salud - afp - cesantiaFactor - factor + factor * afp + factor * salud + factor * cesantiaFactor;
-      var sueldo = parteArriba / parteAbajo;
 
-      if (sueldo > limiteCesantia) {
-        // Listo..!!
-        var tImponible_superior_lim_cesantia = (liquido - factor * limiteAFPSALUD * afp - factor * limiteAFPSALUD * salud - factor * limiteCesantia * cesantiaFactor - descontar + limiteAFPSALUD * afp + limiteAFPSALUD * salud + limiteCesantia * cesantiaFactor) / (1 - factor);
-        this.armarSueldoDesdeImponible(tImponible_superior_lim_cesantia, limiteAFPSALUD * afp, limiteAFPSALUD * salud, limiteCesantia * cesantiaFactor, factor, descontar);
-      } else if (sueldo < limiteAFPSALUD) {
-        var descuentos = sueldo * salud + afp * sueldo + cesantiaFactor * sueldo;
-        var liquido_calculado_ = sueldo - descuentos - ((sueldo - descuentos) * factor - descontar);
-        console.log("Liquido Calculado ", liquido_calculado_);
-        this.armarSueldoDesdeImponible(sueldo, afp * sueldo, sueldo * salud, cesantiaFactor * sueldo, factor, descontar);
-      } else if (sueldo > limiteAFPSALUD && sueldo < limiteCesantia) {
-        var parteArriba_entrerangos = liquido - descontar + limiteAFPSALUD * salud + limiteAFPSALUD * afp - limiteAFPSALUD * factor * afp - limiteAFPSALUD * factor * salud;
-        var parteAbajo_entrerangos = 1 - cesantiaFactor - factor + factor * cesantiaFactor;
-        var sueldoEntreRangos = parteArriba_entrerangos / parteAbajo_entrerangos;
-        this.armarSueldoDesdeImponible(sueldoEntreRangos, limiteAFPSALUD * afp, limiteAFPSALUD * salud, cesantiaFactor * sueldoEntreRangos, factor, descontar);
+      if (this.fun > 0) {
+        var parteArriba = parseInt(liquido) + parseInt(this.MontoSaludDefinitivo) - parseInt(descontar);
+        var parteAbajo = 1 - afp - cesantiaFactor - factor + factor * afp + factor * salud + factor * cesantiaFactor;
+        var sueldo = parteArriba / parteAbajo;
+
+        if (sueldo > limiteCesantia) {
+          // Listo..!!
+          var tImponible_superior_lim_cesantia = (parseInt(liquido) + parseInt(this.MontoSaludDefinitivo) - factor * limiteAFPSALUD * afp - factor * limiteAFPSALUD * salud - factor * limiteCesantia * cesantiaFactor - descontar + limiteAFPSALUD * afp + limiteCesantia * cesantiaFactor) / (1 - factor);
+          this.armarSueldoDesdeImponible(tImponible_superior_lim_cesantia, limiteAFPSALUD * afp, parseInt(limiteAFPSALUD * salud), limiteCesantia * cesantiaFactor, factor, descontar);
+        } else if (sueldo < limiteAFPSALUD) {
+          //let descuentos = (sueldo*salud) + (afp*sueldo) + (cesantiaFactor*sueldo);
+          //let liquido_calculado_ = sueldo - descuentos - ( ( (sueldo-descuentos)*factor) - descontar  );
+          this.armarSueldoDesdeImponible(sueldo, afp * sueldo, sueldo * salud, cesantiaFactor * sueldo, factor, descontar);
+        } else if (sueldo > limiteAFPSALUD && sueldo < limiteCesantia) {
+          var parteArriba_entrerangos = liquido - descontar + parseInt(this.MontoSaludDefinitivo) + limiteAFPSALUD * afp - limiteAFPSALUD * factor * afp - limiteAFPSALUD * factor * salud;
+          var parteAbajo_entrerangos = 1 - cesantiaFactor - factor + factor * cesantiaFactor;
+          var sueldoEntreRangos = parteArriba_entrerangos / parteAbajo_entrerangos;
+          this.armarSueldoDesdeImponible(sueldoEntreRangos, limiteAFPSALUD * afp, limiteAFPSALUD * salud, cesantiaFactor * sueldoEntreRangos, factor, descontar);
+        }
+      } else {
+        var _parteArriba = liquido - descontar;
+
+        var _parteAbajo = 1 - salud - afp - cesantiaFactor - factor + factor * afp + factor * salud + factor * cesantiaFactor;
+
+        var _sueldo = _parteArriba / _parteAbajo;
+
+        if (_sueldo > limiteCesantia) {
+          // Listo..!!
+          var _tImponible_superior_lim_cesantia = (liquido - factor * limiteAFPSALUD * afp - factor * limiteAFPSALUD * salud - factor * limiteCesantia * cesantiaFactor - descontar + limiteAFPSALUD * afp + limiteAFPSALUD * salud + limiteCesantia * cesantiaFactor) / (1 - factor);
+
+          this.armarSueldoDesdeImponible(_tImponible_superior_lim_cesantia, limiteAFPSALUD * afp, limiteAFPSALUD * salud, limiteCesantia * cesantiaFactor, factor, descontar);
+        } else if (_sueldo < limiteAFPSALUD) {
+          var descuentos = _sueldo * salud + afp * _sueldo + cesantiaFactor * _sueldo;
+          var liquido_calculado_ = _sueldo - descuentos - ((_sueldo - descuentos) * factor - descontar);
+          this.armarSueldoDesdeImponible(_sueldo, afp * _sueldo, _sueldo * salud, cesantiaFactor * _sueldo, factor, descontar);
+        } else if (_sueldo > limiteAFPSALUD && _sueldo < limiteCesantia) {
+          var _parteArriba_entrerangos = liquido - descontar + limiteAFPSALUD * salud + limiteAFPSALUD * afp - limiteAFPSALUD * factor * afp - limiteAFPSALUD * factor * salud;
+
+          var _parteAbajo_entrerangos = 1 - cesantiaFactor - factor + factor * cesantiaFactor;
+
+          var _sueldoEntreRangos = _parteArriba_entrerangos / _parteAbajo_entrerangos;
+
+          this.armarSueldoDesdeImponible(_sueldoEntreRangos, limiteAFPSALUD * afp, limiteAFPSALUD * salud, cesantiaFactor * _sueldoEntreRangos, factor, descontar);
+        }
       }
     },
     // Fin porFormula
@@ -2802,13 +2854,22 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
         this.sueldoCalculado.montoGratificacionLegal = imponible * 0.25;
       }
 
-      this.sueldoCalculado.noImponible = this.totalNoImponible * 1;
+      if (this.fun > 0) {
+        this.sueldoCalculado.adicionalIsapre = Math.abs(this.Parametros.UF * this.fun - montoIsapre);
+      } else {
+        this.sueldoCalculado.adicionalIsapre = 0;
+      }
+
+      this.sueldoCalculado.noImponible = this.asignarCargas() * 1 + this.totalNoImponible * 1;
       this.sueldoCalculado.imponible = imponible;
       this.sueldoCalculado.MontoAfp = montoAfp;
-      this.sueldoCalculado.MontoIsapre = montoIsapre;
+      this.sueldoCalculado.MontoIsapre = parseInt(this.MontoSaludDefinitivo);
       this.sueldoCalculado.MontoCesantia = montoCesantia;
+      this.sueldoCalculado.MontoPorCargas = this.asignarCargas();
+      console.log("this.asignarCargas();", this.asignarCargas());
+      console.log("FACTOR EN armar sueldo ", factor);
       this.sueldoCalculado.impuesto = (imponible - (montoAfp + montoCesantia + montoIsapre)) * factor - descontar;
-      this.sueldoCalculado.liquido = imponible - (montoAfp + montoCesantia + montoIsapre + this.sueldoCalculado.impuesto);
+      this.sueldoCalculado.liquido = imponible - (montoAfp + montoCesantia + parseInt(this.MontoSaludDefinitivo) + this.sueldoCalculado.impuesto);
       console.log("sueldoCalculado", this.sueldoCalculado);
       this.liquidacion_terminada = true;
       setTimeout(function () {
@@ -39835,211 +39896,278 @@ var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _c("div", { staticClass: "container-fluid" }, [
-    _c("h4", { staticClass: "text-center mb-4" }, [
-      _vm._v("Liquidación de sueldo generada")
-    ]),
-    _vm._v(" "),
-    _c("div", { staticClass: "row" }, [
-      _c("div", { staticClass: "col-lg-6 col-sm-12 " }, [
-        _c("h5", { staticClass: "text-center text-muted" }, [
-          _vm._v("Haberes")
+  return _vm.liquidacion_generada
+    ? _c("div", { staticClass: "container-fluid" }, [
+        _c("h4", { staticClass: "text-center mb-4" }, [
+          _vm._v("Liquidación de sueldo generada")
         ]),
         _vm._v(" "),
         _c("div", { staticClass: "row" }, [
-          _c("div", { staticClass: "col-lg-6 col-sm-12 item-liquidacion" }, [
-            _vm._v("\n                Sueldo Base:\n              ")
+          _c("div", { staticClass: "col-lg-6 col-sm-12 " }, [
+            _c("h5", { staticClass: "text-center text-muted" }, [
+              _vm._v("Haberes")
+            ]),
+            _vm._v(" "),
+            _c("div", { staticClass: "row" }, [
+              _c(
+                "div",
+                { staticClass: "col-lg-6 col-sm-12 item-liquidacion" },
+                [_vm._v("\n                Sueldo Base:\n              ")]
+              ),
+              _vm._v(" "),
+              _c(
+                "div",
+                { staticClass: "col-lg-6 col-sm-12 item-liquidacion" },
+                [
+                  _vm._v(
+                    "\n                " +
+                      _vm._s(
+                        _vm._f("aproximarConPeso")(
+                          _vm.liquidacion_generada.sueldoBase,
+                          0
+                        )
+                      ) +
+                      "\n              "
+                  )
+                ]
+              )
+            ]),
+            _vm._v(" "),
+            _c("div", { staticClass: "row" }, [
+              _c(
+                "div",
+                { staticClass: "col-lg-6 col-sm-12 item-liquidacion" },
+                [_vm._v("\n                Gratificación:\n              ")]
+              ),
+              _vm._v(" "),
+              _c(
+                "div",
+                { staticClass: "col-lg-6 col-sm-12 item-liquidacion" },
+                [
+                  _vm._v(
+                    "\n                " +
+                      _vm._s(
+                        _vm._f("aproximarConPeso")(
+                          _vm.liquidacion_generada.montoGratificacionLegal,
+                          0
+                        )
+                      ) +
+                      "\n              "
+                  )
+                ]
+              )
+            ])
           ]),
           _vm._v(" "),
-          _c("div", { staticClass: "col-lg-6 col-sm-12 item-liquidacion" }, [
-            _vm._v(
-              "\n                " +
-                _vm._s(
-                  _vm._f("aproximarConPeso")(
-                    _vm.liquidacion_generada.sueldoBase,
-                    0
+          _c("div", { staticClass: "col-lg-6 col-sm-12 " }, [
+            _c("h5", { staticClass: "text-center  text-muted" }, [
+              _vm._v("Descuentos Legales")
+            ]),
+            _vm._v(" "),
+            _c("div", { staticClass: "row " }, [
+              _c(
+                "div",
+                { staticClass: "col-lg-6 col-sm-12 item-liquidacion" },
+                [
+                  _vm._v(
+                    "\n                          AFP:\n                        "
                   )
-                ) +
-                "\n              "
-            )
+                ]
+              ),
+              _vm._v(" "),
+              _c(
+                "div",
+                { staticClass: "col-lg-6 col-sm-12 item-liquidacion" },
+                [
+                  _vm._v(
+                    "\n                          " +
+                      _vm._s(
+                        _vm._f("aproximarConPeso")(
+                          _vm.liquidacion_generada.MontoAfp,
+                          0
+                        )
+                      ) +
+                      "\n                        "
+                  )
+                ]
+              )
+            ]),
+            _vm._v(" "),
+            _c("div", { staticClass: "row" }, [
+              _c(
+                "div",
+                { staticClass: "col-lg-6 col-sm-12 item-liquidacion" },
+                [
+                  _vm._v(
+                    "\n                          Isapre:\n                        "
+                  )
+                ]
+              ),
+              _vm._v(" "),
+              _c(
+                "div",
+                { staticClass: "col-lg-6 col-sm-12 item-liquidacion" },
+                [
+                  _vm._v(
+                    "\n                          " +
+                      _vm._s(
+                        _vm._f("aproximarConPeso")(
+                          _vm.liquidacion_generada.MontoIsapre,
+                          0
+                        )
+                      ) +
+                      "\n                        "
+                  )
+                ]
+              )
+            ]),
+            _vm._v(" "),
+            _c("div", { staticClass: "row" }, [
+              _c(
+                "div",
+                { staticClass: "col-lg-6 col-sm-12 item-liquidacion" },
+                [
+                  _vm._v(
+                    "\n                          Cesantía:\n                        "
+                  )
+                ]
+              ),
+              _vm._v(" "),
+              _c(
+                "div",
+                { staticClass: "col-lg-6 col-sm-12 item-liquidacion" },
+                [
+                  _vm._v(
+                    "\n                          " +
+                      _vm._s(
+                        _vm._f("aproximarConPeso")(
+                          _vm.liquidacion_generada.MontoCesantia,
+                          0
+                        )
+                      ) +
+                      "\n                        "
+                  )
+                ]
+              )
+            ]),
+            _vm._v(" "),
+            _c("div", { staticClass: "row" }, [
+              _c(
+                "div",
+                { staticClass: "col-lg-6 col-sm-12 item-liquidacion" },
+                [
+                  _vm._v(
+                    "\n                          Impuesto:\n                        "
+                  )
+                ]
+              ),
+              _vm._v(" "),
+              _c(
+                "div",
+                { staticClass: "col-lg-6 col-sm-12 item-liquidacion" },
+                [
+                  _vm._v(
+                    "\n                          " +
+                      _vm._s(
+                        _vm._f("aproximarConPeso")(
+                          _vm.liquidacion_generada.impuesto,
+                          0
+                        )
+                      ) +
+                      "\n                        "
+                  )
+                ]
+              )
+            ]),
+            _vm._v(" "),
+            _c("div", { staticClass: "row" }, [
+              _c(
+                "div",
+                { staticClass: "col-lg-6 col-sm-12 item-liquidacion" },
+                [
+                  _vm._v(
+                    "\n                          Adicional Isapre:\n                        "
+                  )
+                ]
+              ),
+              _vm._v(" "),
+              _c(
+                "div",
+                { staticClass: "col-lg-6 col-sm-12 item-liquidacion" },
+                [
+                  _vm._v(
+                    "\n                          " +
+                      _vm._s(
+                        _vm._f("aproximarConPeso")(
+                          _vm.liquidacion_generada.adicionalIsapre,
+                          0
+                        )
+                      ) +
+                      "\n                        "
+                  )
+                ]
+              )
+            ])
           ])
         ]),
         _vm._v(" "),
-        _c("div", { staticClass: "row" }, [
-          _c("div", { staticClass: "col-lg-6 col-sm-12 item-liquidacion" }, [
-            _vm._v("\n                Gratificación:\n              ")
+        _c("div", { staticClass: "row mt-3" }, [
+          _c("div", { staticClass: "col-lg-6 col-sm-12" }, [
+            _c("h5", { staticClass: "text-center  text-muted" }, [
+              _vm._v("Haberes no imponibles")
+            ]),
+            _vm._v(" "),
+            _c("div", { staticClass: "row" }, [
+              _c(
+                "div",
+                { staticClass: "col-lg-7 col-sm-12 item-liquidacion" },
+                [
+                  _vm._v(
+                    "\n                          No imponibles:\n                        "
+                  )
+                ]
+              ),
+              _vm._v(" "),
+              _c(
+                "div",
+                { staticClass: "col-lg-5 col-sm-12 item-liquidacion" },
+                [
+                  _vm._v(
+                    "\n                          " +
+                      _vm._s(
+                        _vm._f("aproximarConPeso")(
+                          _vm.liquidacion_generada.noImponible,
+                          0
+                        )
+                      ) +
+                      "\n                        "
+                  )
+                ]
+              )
+            ])
           ]),
           _vm._v(" "),
-          _c("div", { staticClass: "col-lg-6 col-sm-12 item-liquidacion" }, [
-            _vm._v(
-              "\n                " +
-                _vm._s(
-                  _vm._f("aproximarConPeso")(
-                    _vm.liquidacion_generada.montoGratificacionLegal,
-                    0
-                  )
-                ) +
-                "\n              "
-            )
-          ])
-        ])
-      ]),
-      _vm._v(" "),
-      _c("div", { staticClass: "col-lg-6 col-sm-12 " }, [
-        _c("h5", { staticClass: "text-center  text-muted" }, [
-          _vm._v("Descuentos Legales")
+          _vm._m(0)
         ]),
         _vm._v(" "),
-        _c("div", { staticClass: "row " }, [
-          _c("div", { staticClass: "col-lg-6 col-sm-12 item-liquidacion" }, [
-            _vm._v("\n                          AFP:\n                        ")
-          ]),
+        _c("div", { staticClass: "row mt-4" }, [
+          _vm._m(1),
           _vm._v(" "),
-          _c("div", { staticClass: "col-lg-6 col-sm-12 item-liquidacion" }, [
+          _c("div", { staticClass: "col-12 text-center" }, [
             _vm._v(
-              "\n                          " +
+              "\n      " +
                 _vm._s(
                   _vm._f("aproximarConPeso")(
-                    _vm.liquidacion_generada.MontoAfp,
+                    _vm.liquidacion_generada.liquido,
                     0
                   )
                 ) +
-                "\n                        "
-            )
-          ])
-        ]),
-        _vm._v(" "),
-        _c("div", { staticClass: "row" }, [
-          _c("div", { staticClass: "col-lg-6 col-sm-12 item-liquidacion" }, [
-            _vm._v(
-              "\n                          Isapre:\n                        "
-            )
-          ]),
-          _vm._v(" "),
-          _c("div", { staticClass: "col-lg-6 col-sm-12 item-liquidacion" }, [
-            _vm._v(
-              "\n                          " +
-                _vm._s(
-                  _vm._f("aproximarConPeso")(
-                    _vm.liquidacion_generada.MontoIsapre,
-                    0
-                  )
-                ) +
-                "\n                        "
-            )
-          ])
-        ]),
-        _vm._v(" "),
-        _c("div", { staticClass: "row" }, [
-          _c("div", { staticClass: "col-lg-6 col-sm-12 item-liquidacion" }, [
-            _vm._v(
-              "\n                          Cesantía:\n                        "
-            )
-          ]),
-          _vm._v(" "),
-          _c("div", { staticClass: "col-lg-6 col-sm-12 item-liquidacion" }, [
-            _vm._v(
-              "\n                          " +
-                _vm._s(
-                  _vm._f("aproximarConPeso")(
-                    _vm.liquidacion_generada.MontoCesantia,
-                    0
-                  )
-                ) +
-                "\n                        "
-            )
-          ])
-        ]),
-        _vm._v(" "),
-        _c("div", { staticClass: "row" }, [
-          _c("div", { staticClass: "col-lg-6 col-sm-12 item-liquidacion" }, [
-            _vm._v(
-              "\n                          Impuesto:\n                        "
-            )
-          ]),
-          _vm._v(" "),
-          _c("div", { staticClass: "col-lg-6 col-sm-12 item-liquidacion" }, [
-            _vm._v(
-              "\n                          " +
-                _vm._s(
-                  _vm._f("aproximarConPeso")(
-                    _vm.liquidacion_generada.impuesto,
-                    0
-                  )
-                ) +
-                "\n                        "
-            )
-          ])
-        ]),
-        _vm._v(" "),
-        _c("div", { staticClass: "row" }, [
-          _c("div", { staticClass: "col-lg-6 col-sm-12 item-liquidacion" }, [
-            _vm._v(
-              "\n                          Adicional Isapre:\n                        "
-            )
-          ]),
-          _vm._v(" "),
-          _c("div", { staticClass: "col-lg-6 col-sm-12 item-liquidacion" }, [
-            _vm._v(
-              "\n                          " +
-                _vm._s(
-                  _vm._f("aproximarConPeso")(
-                    _vm.liquidacion_generada.adicionalIsapre,
-                    0
-                  )
-                ) +
-                "\n                        "
+                "\n    "
             )
           ])
         ])
       ])
-    ]),
-    _vm._v(" "),
-    _c("div", { staticClass: "row mt-3" }, [
-      _c("div", { staticClass: "col-lg-6 col-sm-12" }, [
-        _c("h5", { staticClass: "text-center  text-muted" }, [
-          _vm._v("Haberes no imponibles")
-        ]),
-        _vm._v(" "),
-        _c("div", { staticClass: "row" }, [
-          _c("div", { staticClass: "col-lg-7 col-sm-12 item-liquidacion" }, [
-            _vm._v(
-              "\n                          No imponibles:\n                        "
-            )
-          ]),
-          _vm._v(" "),
-          _c("div", { staticClass: "col-lg-5 col-sm-12 item-liquidacion" }, [
-            _vm._v(
-              "\n                          " +
-                _vm._s(
-                  _vm._f("aproximarConPeso")(
-                    _vm.liquidacion_generada.noImponible,
-                    0
-                  )
-                ) +
-                "\n                        "
-            )
-          ])
-        ])
-      ]),
-      _vm._v(" "),
-      _vm._m(0)
-    ]),
-    _vm._v(" "),
-    _c("div", { staticClass: "row mt-4" }, [
-      _vm._m(1),
-      _vm._v(" "),
-      _c("div", { staticClass: "col-12 text-center" }, [
-        _vm._v(
-          "\n      " +
-            _vm._s(
-              _vm._f("aproximarConPeso")(_vm.liquidacion_generada.liquido, 0)
-            ) +
-            "\n    "
-        )
-      ])
-    ])
-  ])
+    : _vm._e()
 }
 var staticRenderFns = [
   function() {
@@ -40299,31 +40427,32 @@ var render = function() {
                     staticClass: "form-control",
                     attrs: { id: "AFP_Input" },
                     on: {
-                      change: [
-                        function($event) {
-                          var $$selectedVal = Array.prototype.filter
-                            .call($event.target.options, function(o) {
-                              return o.selected
-                            })
-                            .map(function(o) {
-                              var val = "_value" in o ? o._value : o.value
-                              return val
-                            })
-                          _vm.PrevisionSeleccionada = $event.target.multiple
-                            ? $$selectedVal
-                            : $$selectedVal[0]
-                        },
-                        function($event) {
-                          return _vm.eleccionPrevision()
-                        }
-                      ]
+                      change: function($event) {
+                        var $$selectedVal = Array.prototype.filter
+                          .call($event.target.options, function(o) {
+                            return o.selected
+                          })
+                          .map(function(o) {
+                            var val = "_value" in o ? o._value : o.value
+                            return val
+                          })
+                        _vm.PrevisionSeleccionada = $event.target.multiple
+                          ? $$selectedVal
+                          : $$selectedVal[0]
+                      }
                     }
                   },
                   _vm._l(_vm.AFPS, function(item) {
                     return _c(
                       "option",
                       { domProps: { value: item.comision } },
-                      [_vm._v(_vm._s(item.nombre_afp))]
+                      [
+                        _vm._v(
+                          _vm._s(item.nombre_afp) +
+                            " - Comision " +
+                            _vm._s(item.comision)
+                        )
+                      ]
                     )
                   }),
                   0
@@ -40529,14 +40658,14 @@ var staticRenderFns = [
     var _h = _vm.$createElement
     var _c = _vm._self._c || _h
     return _c("div", { staticClass: "form-group" }, [
-      _c("label", { attrs: { for: "Tramo" } }, [_vm._v("Tramo Cargas")]),
+      _c("label", { attrs: { for: "Tramocargas" } }, [_vm._v("Tramo Cargas")]),
       _vm._v(" "),
       _c("select", { staticClass: "form-control", attrs: { id: "Tramo" } }, [
-        _c("option", { attrs: { tramo: "1" } }, [_vm._v("Tramo 1")]),
+        _c("option", { attrs: { value: "1" } }, [_vm._v("Tramo 1")]),
         _vm._v(" "),
-        _c("option", { attrs: { tramo: "2" } }, [_vm._v("Tramo 2")]),
+        _c("option", { attrs: { value: "2" } }, [_vm._v("Tramo 2")]),
         _vm._v(" "),
-        _c("option", { attrs: { tramo: "3" } }, [_vm._v("Tramo 3")])
+        _c("option", { attrs: { value: "3" } }, [_vm._v("Tramo 3")])
       ]),
       _vm._v(" "),
       _c(

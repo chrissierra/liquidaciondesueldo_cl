@@ -1,6 +1,6 @@
 <template>
    
-  <div class="container-fluid">
+  <div  v-if="liquidacion_generada"  class="container-fluid">
       <h4 class="text-center mb-4">Liquidación de sueldo generada</h4>
     <div class="row">
           <div class="col-lg-6 col-sm-12 ">

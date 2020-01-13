@@ -54,9 +54,9 @@
 
               <div class="form-group">
                 <label for="AFP_Input">AFP</label>
-                <select    class="form-control" id="AFP_Input"  v-model="PrevisionSeleccionada">
+                <select  @change="eleccionPrevision()"  class="form-control" id="AFP_Input"  v-model="PrevisionSeleccionada">
                 
-                  <option v-for="item in AFPS" :value="item.comision">{{ item.nombre_afp }} - Comision {{item.comision}}</option>
+                  <option v-for="item in AFPS" :value="item.comision">{{ item.nombre_afp }}</option>
 
                 </select>
               </div>   
@@ -75,11 +75,11 @@
               </div>  
 
               <div class="form-group">
-                <label for="Tramocargas">Tramo Cargas</label>
+                <label for="Tramo">Tramo Cargas</label>
                 <select class="form-control" id="Tramo">
-                  <option value="1">Tramo 1</option>
-                  <option value="2">Tramo 2</option>
-                  <option value="3">Tramo 3</option>
+                  <option tramo="1">Tramo 1</option>
+                  <option tramo="2">Tramo 2</option>
+                  <option tramo="3">Tramo 3</option>
                 </select>
                <small id="tramoAyuda" class="form-text text-muted">Si no tiene cargas, no consideres éste campo</small>
               </div>    
@@ -121,7 +121,6 @@
                 totalNoImponible:0,
                 sueldoLiquidoPactado: 0,
                 cargas: 0,
-                Tramocargas: 0,
                 gratificacionLegal: 1,
                 SaludSeleccionada:'Fonasa',
                 PrevisionSeleccionada:0,
@@ -139,7 +138,16 @@
             
                 clikeando(e){
                     
-                    e.preventDefault();
+                    e.preventDefault()
+                    /*
+                    if( (totalImponible/1.25) * 0.25 > 119146){
+                      this.sueldoBase = totalImponible - 119146;
+                      this.montoGratificacionLegal = 119146;
+                    }else{
+                      this.sueldoBase = totalImponible /1.25;
+                      this.montoGratificacionLegal = totalImponible * 0.25;
+
+                    }*/
 
                     axios
                     .post('api/ImpuestosDelMes', {mes:1, anio:2020}, { crossdomain: true })
@@ -147,29 +155,19 @@
 
                         let cesantia = this.TipoContrato === 2 ? 0 : 0.006;
                         
-                        var coficienteUniversal = 1 - ((this.PrevisionSeleccionada/100) + 0.07 )
+                        var coficienteUniversal = 1 - ((this.PrevisionSeleccionada/100) + 0.07 + cesantia)
                         
                         let coficienteAFPISAPRE = 1 - ((this.PrevisionSeleccionada/100) + 0.07 )
-
-                        let coef_afp = 1 - ((this.PrevisionSeleccionada/100) )
-                        
-                        let coef_isapre = 1 - ( 0.07 )
                         
                         let tributable = (this.sueldoLiquidoPactado - this.totalNoImponible );
                         
                         coficienteUniversal = coficienteAFPISAPRE + cesantia;
                         
                         let descuentosAfpIsapre = (tributable / coficienteUniversal) * (1-coficienteAFPISAPRE);
-
-                        let descuento_afp = (tributable / coficienteUniversal) * (1-coef_afp);
                         
-                        let descuentosIsapre = (tributable / coficienteUniversal) * (1-coef_isapre);
-
                         let descuentosCesantia = (tributable / coficienteUniversal) * cesantia;
 
-                        this.analizarSiFun(descuentosIsapre);
-
-                        let totalImponible = tributable + this.diferencia_salud;
+                        let totalImponible = tributable + descuentosCesantia + descuentosAfpIsapre;
 
                         this.impuestos = response.data;
 
@@ -178,34 +176,18 @@
                     });
 
                 },
-                analizarSiFun(descuentosIsapre_en_funcion){
-                  if( this.fun > 0 ){
+                eleccionSalud(e){
 
-                    let saludFun = parseFloat(this.Parametros.UF * this.fun);
+                },
+                eleccionPrevision(){
 
-                    if(saludFun > descuentosIsapre_en_funcion){
-                      
-                      this.MontoSaludDefinitivo = saludFun;
-
-                      this.diferencia_salud = (Math.abs(saludFun - descuentosIsapre_en_funcion) * 1);
-                      
-                    }else{
-
-                      this.MontoSaludDefinitivo = descuentosIsapre_en_funcion;
-                  
-                      this.diferencia_salud = 0;
-                    }              
-
-                  }else{
-                    
-                      this.MontoSaludDefinitivo = descuentosIsapre_en_funcion;
-                  
-                      this.diferencia_salud = 0;
-                  }
                 },
                 json2array(json){
                       var result = [];
                       Object.entries(json).forEach(([key, value]) => {                            
+                               /*let rObj = {}
+                               rObj[key] = value;
+                               result.push(rObj) */
                                result.push({
                                 nombre_afp: key,
                                 comision: value
@@ -215,33 +197,7 @@
 
                       return result;
                 },
-                asignarCargas(){
-                  let montoPorCargas = 0;
-                  console.log("this.Tramocargas", this.Tramocargas)
-                  this.cargas= this.cargas*1;
-                  console.log("this.cargas", this.cargas)
-                  
-                  if(this.Tramocargas == 1){
-                    console.log("this.Parametros.AsignFamA ", this.Parametros.AsignFamA )
-                    montoPorCargas = this.Parametros.AsigFamA * this.cargas;
-                  }else if(this.Tramocargas == 2){
-                    console.log("this.Parametros.AsignFamA ", this.Parametros.AsignFamB )
-                    montoPorCargas = this.Parametros.AsigFamB * this.cargas;
-
-                  }else if(this.Tramocargas == 3){
-                    console.log("this.Parametros.AsignFamA ", this.Parametros.AsignFamC )
-                    montoPorCargas = this.Parametros.AsigFamC * this.cargas;
-
-                  }else{
-                    montoPorCargas = 0;
-                  }
-                  console.log("montoPorCargas", montoPorCargas)
-                  return montoPorCargas;
-                },
                 desdeBaseDarLiquidoDefinito(imponible_preliminar, coef_afpsalud, coef_cesantia, LiqPactado, coef_universal, afp, salud, parametros){
-                  
-                  console.log("imponible_preliminar en desdebasedarliquido *****", imponible_preliminar)
-
                   if(this.impuestos[0].desde > imponible_preliminar)   return this.porFormula((0.07),afp,coef_cesantia, 0, 0, LiqPactado, coef_afpsalud, parametros, coef_universal );
 
                   this.impuestos.forEach(value => {
@@ -255,85 +211,45 @@
                   })
               
                 }, // Fin desdebasedarliquidodefinito
+                gradienteAscedenteSueldo(imponible_preliminar, coef_afpsalud, coef_cesantia, LiqPactado, impuesto){
+                      let descuentos_afpsalud = imponible_preliminar *(1-coef_afpsalud);
+                      let descuentos_cesantia = imponible_preliminar *(coef_cesantia);
+                      let tributable = imponible_preliminar - (descuentos_cesantia + descuentos_afpsalud);
+                      let impuesto_a_rebajar =((tributable * impuesto.factor) - impuesto.cantidadRebajar);
+                      let liquido_calculado = tributable - impuesto_a_rebajar;
+                      return liquido_calculado;
+                },
                 porFormula(salud, afp, cesantiaFactor,factor, descontar, liquido, coefAFPISAPRE, Parametros, coef_universal){
                  
                   let limiteAFPSALUD = 2242147;
                   let limiteCesantia = 3366052;
-              
+                  let parteArriba = liquido - descontar;
+                  let parteAbajo = 1 - salud - afp - cesantiaFactor - factor + (factor*afp) + (factor*salud) + (factor * cesantiaFactor);
+                  let sueldo = parteArriba / parteAbajo;
 
-                  if( this.fun > 0 ){
-                      let parteArriba = parseInt(liquido) + parseInt(this.MontoSaludDefinitivo)  - parseInt(descontar);
-                      let parteAbajo = 1  - afp - cesantiaFactor - factor + (factor*afp) + (factor*salud) + (factor * cesantiaFactor);
-                      let sueldo = parteArriba / parteAbajo;
+                  if(sueldo > limiteCesantia){
+                    // Listo..!!
+                    let tImponible_superior_lim_cesantia = (((liquido - (factor*limiteAFPSALUD*afp) - (factor*limiteAFPSALUD*salud)-(factor*limiteCesantia*cesantiaFactor))-descontar + (limiteAFPSALUD*afp) + (limiteAFPSALUD*salud)+(limiteCesantia*cesantiaFactor))/     ( 1-factor))
 
-                      if(sueldo > limiteCesantia){
-                                // Listo..!!
-                                let tImponible_superior_lim_cesantia = (((parseInt(liquido)+ parseInt(this.MontoSaludDefinitivo)  - (factor*limiteAFPSALUD*afp) - (factor*limiteAFPSALUD*salud)-(factor*limiteCesantia*cesantiaFactor))-descontar + (limiteAFPSALUD*afp) +(limiteCesantia*cesantiaFactor))/     ( 1-factor))
+                    this.armarSueldoDesdeImponible(tImponible_superior_lim_cesantia, limiteAFPSALUD*afp, limiteAFPSALUD*salud, limiteCesantia*cesantiaFactor ,factor, descontar)
+                  
+                  }else if(sueldo < limiteAFPSALUD){
+                      
+                      let descuentos = (sueldo*salud) + (afp*sueldo) + (cesantiaFactor*sueldo);
+                      let liquido_calculado_ = sueldo - descuentos - ( ( (sueldo-descuentos)*factor) - descontar  );
+                      console.log("Liquido Calculado ", liquido_calculado_);
+                      this.armarSueldoDesdeImponible(sueldo, (afp*sueldo), (sueldo*salud), (cesantiaFactor*sueldo) ,factor, descontar);
 
-                                this.armarSueldoDesdeImponible(tImponible_superior_lim_cesantia, limiteAFPSALUD*afp, parseInt(limiteAFPSALUD*salud) , limiteCesantia*cesantiaFactor ,factor, descontar)
-                              
-                      }else if(sueldo < limiteAFPSALUD){
-                                  
-                                  //let descuentos = (sueldo*salud) + (afp*sueldo) + (cesantiaFactor*sueldo);
-                                  //let liquido_calculado_ = sueldo - descuentos - ( ( (sueldo-descuentos)*factor) - descontar  );
-                                  this.armarSueldoDesdeImponible(sueldo, (afp*sueldo), (sueldo*salud), (cesantiaFactor*sueldo) ,factor, descontar);
+                  }else if(sueldo > limiteAFPSALUD && sueldo < limiteCesantia){
 
-                      }else if(sueldo > limiteAFPSALUD && sueldo < limiteCesantia){
+                    let parteArriba_entrerangos = liquido-descontar+(limiteAFPSALUD*salud)+(limiteAFPSALUD*afp)-(limiteAFPSALUD*factor*afp)-(limiteAFPSALUD*factor*salud);
 
-                                let parteArriba_entrerangos = liquido-descontar+ parseInt(this.MontoSaludDefinitivo) +(limiteAFPSALUD*afp)-(limiteAFPSALUD*factor*afp)-(limiteAFPSALUD*factor*salud);
+                    let parteAbajo_entrerangos= 1-cesantiaFactor - factor +( factor*cesantiaFactor);
 
-                                let parteAbajo_entrerangos= 1-cesantiaFactor - factor +( factor*cesantiaFactor);
+                    let sueldoEntreRangos = parteArriba_entrerangos / parteAbajo_entrerangos;
 
-                                let sueldoEntreRangos = parteArriba_entrerangos / parteAbajo_entrerangos;
-
-                                this.armarSueldoDesdeImponible(sueldoEntreRangos, (limiteAFPSALUD*afp), (limiteAFPSALUD*salud), (cesantiaFactor*sueldoEntreRangos) ,factor, descontar)
-                      }
-
-
-
-
-
-
-
-
-
-
-                  }else{
-                      let parteArriba = liquido - descontar;
-                      let parteAbajo = 1 - salud - afp - cesantiaFactor - factor + (factor*afp) + (factor*salud) + (factor * cesantiaFactor);
-                      let sueldo = parteArriba / parteAbajo;
-
-                      if(sueldo > limiteCesantia){
-                                // Listo..!!
-                                let tImponible_superior_lim_cesantia = (((liquido - (factor*limiteAFPSALUD*afp) - (factor*limiteAFPSALUD*salud)-(factor*limiteCesantia*cesantiaFactor))-descontar + (limiteAFPSALUD*afp) + (limiteAFPSALUD*salud)+(limiteCesantia*cesantiaFactor))/     ( 1-factor))
-
-                                this.armarSueldoDesdeImponible(tImponible_superior_lim_cesantia, limiteAFPSALUD*afp, limiteAFPSALUD*salud, limiteCesantia*cesantiaFactor ,factor, descontar)
-                              
-                      }else if(sueldo < limiteAFPSALUD){
-                                  
-                                  let descuentos = (sueldo*salud) + (afp*sueldo) + (cesantiaFactor*sueldo);
-                                  let liquido_calculado_ = sueldo - descuentos - ( ( (sueldo-descuentos)*factor) - descontar  );
-                                  this.armarSueldoDesdeImponible(sueldo, (afp*sueldo), (sueldo*salud), (cesantiaFactor*sueldo) ,factor, descontar);
-
-                      }else if(sueldo > limiteAFPSALUD && sueldo < limiteCesantia){
-
-                                let parteArriba_entrerangos = liquido-descontar+(limiteAFPSALUD*salud)+(limiteAFPSALUD*afp)-(limiteAFPSALUD*factor*afp)-(limiteAFPSALUD*factor*salud);
-
-                                let parteAbajo_entrerangos= 1-cesantiaFactor - factor +( factor*cesantiaFactor);
-
-                                let sueldoEntreRangos = parteArriba_entrerangos / parteAbajo_entrerangos;
-
-                                this.armarSueldoDesdeImponible(sueldoEntreRangos, (limiteAFPSALUD*afp), (limiteAFPSALUD*salud), (cesantiaFactor*sueldoEntreRangos) ,factor, descontar)
-                      }
+                     this.armarSueldoDesdeImponible(sueldoEntreRangos, (limiteAFPSALUD*afp), (limiteAFPSALUD*salud), (cesantiaFactor*sueldoEntreRangos) ,factor, descontar)
                   }
-
-                  
-                  
-
-
-
-
-
 
                 },  // Fin porFormula
                 armarSueldoDesdeImponible(imponible, montoAfp, montoIsapre, montoCesantia, factor, descontar){
@@ -346,23 +262,14 @@
                       this.sueldoCalculado.montoGratificacionLegal = imponible * 0.25;
 
                     }
-
-                  if(this.fun > 0){
-                    this.sueldoCalculado.adicionalIsapre = Math.abs(this.Parametros.UF * this.fun -  montoIsapre)
-                  }else{
-                    this.sueldoCalculado.adicionalIsapre = 0;
-                  }
                   
-                  this.sueldoCalculado.noImponible = (this.asignarCargas()*1) + (this.totalNoImponible * 1);
+                  this.sueldoCalculado.noImponible = this.totalNoImponible * 1;
                   this.sueldoCalculado.imponible = imponible;
                   this.sueldoCalculado.MontoAfp = montoAfp;
-                  this.sueldoCalculado.MontoIsapre = parseInt(this.MontoSaludDefinitivo);
+                  this.sueldoCalculado.MontoIsapre = montoIsapre;
                   this.sueldoCalculado.MontoCesantia = montoCesantia;
-                  this.sueldoCalculado.MontoPorCargas = this.asignarCargas();
-                  console.log("this.asignarCargas();", this.asignarCargas())
-                  console.log("FACTOR EN armar sueldo ", factor)
                   this.sueldoCalculado.impuesto = ((imponible - (montoAfp + montoCesantia + montoIsapre)) * factor) - descontar
-                  this.sueldoCalculado.liquido = imponible - (montoAfp + montoCesantia + parseInt(this.MontoSaludDefinitivo) + this.sueldoCalculado.impuesto)                  
+                  this.sueldoCalculado.liquido = imponible - (montoAfp + montoCesantia + montoIsapre + this.sueldoCalculado.impuesto)                  
                   console.log("sueldoCalculado", this.sueldoCalculado);
                   this.liquidacion_terminada = true;
                   setTimeout(( )=> {
@@ -373,10 +280,6 @@
         }
     }
 </script>
-
-
-
-
 
 
 <style>
