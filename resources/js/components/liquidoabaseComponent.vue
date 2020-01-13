@@ -76,7 +76,8 @@
 
               <div class="form-group">
                 <label for="Tramocargas">Tramo Cargas</label>
-                <select class="form-control" id="Tramo">
+                <select v-model="Tramocargas"  class="form-control" id="Tramo">
+                  <option value="0">Sin Cargas</option>
                   <option value="1">Tramo 1</option>
                   <option value="2">Tramo 2</option>
                   <option value="3">Tramo 3</option>
@@ -132,7 +133,8 @@
                 montoGratificacionLegal:0,
                 impuestos: [],
                 sueldoCalculado:{},
-                liquidacion_terminada: false
+                liquidacion_terminada: false,
+                montoPorCargas: 0
             }
         },  
         methods: {
@@ -173,7 +175,7 @@
 
                         this.impuestos = response.data;
 
-                        this.desdeBaseDarLiquidoDefinito(totalImponible, coficienteAFPISAPRE, cesantia, this.sueldoLiquidoPactado, coficienteAFPISAPRE+cesantia, (this.PrevisionSeleccionada/100), 0.07, this.Parametros);
+                        this.desdeBaseDarLiquidoDefinito((totalImponible - this.totalNoImponible), coficienteAFPISAPRE, cesantia, this.sueldoLiquidoPactado, coficienteAFPISAPRE+cesantia, (this.PrevisionSeleccionada/100), 0.07, this.Parametros);
 
                     });
 
@@ -236,7 +238,7 @@
                     montoPorCargas = 0;
                   }
                   console.log("montoPorCargas", montoPorCargas)
-                  return montoPorCargas;
+                  this.montoPorCargas = montoPorCargas;
                 },
                 desdeBaseDarLiquidoDefinito(imponible_preliminar, coef_afpsalud, coef_cesantia, LiqPactado, coef_universal, afp, salud, parametros){
                   
@@ -259,7 +261,7 @@
                  
                   let limiteAFPSALUD = 2242147;
                   let limiteCesantia = 3366052;
-              
+                  liquido = liquido - this.totalNoImponible;
 
                   if( this.fun > 0 ){
                       let parteArriba = parseInt(liquido) + parseInt(this.MontoSaludDefinitivo)  - parseInt(descontar);
@@ -337,15 +339,16 @@
 
                 },  // Fin porFormula
                 armarSueldoDesdeImponible(imponible, montoAfp, montoIsapre, montoCesantia, factor, descontar){
+                  this.asignarCargas();
 
-                    if( (imponible/1.25) * 0.25 > 119146){
+                  if( (imponible/1.25) * 0.25 > 119146){
                       this.sueldoCalculado.sueldoBase = imponible - 119146;
                       this.sueldoCalculado.montoGratificacionLegal = 119146;
-                    }else{
+                  }else{
                       this.sueldoCalculado.sueldoBase = imponible /1.25;
                       this.sueldoCalculado.montoGratificacionLegal = imponible * 0.25;
 
-                    }
+                  }
 
                   if(this.fun > 0){
                     this.sueldoCalculado.adicionalIsapre = Math.abs(this.Parametros.UF * this.fun -  montoIsapre)
@@ -353,16 +356,16 @@
                     this.sueldoCalculado.adicionalIsapre = 0;
                   }
                   
-                  this.sueldoCalculado.noImponible = (this.asignarCargas()*1) + (this.totalNoImponible * 1);
+                  this.sueldoCalculado.noImponible = (this.montoPorCargas*1) + (this.totalNoImponible * 1);
                   this.sueldoCalculado.imponible = imponible;
                   this.sueldoCalculado.MontoAfp = montoAfp;
                   this.sueldoCalculado.MontoIsapre = parseInt(this.MontoSaludDefinitivo);
                   this.sueldoCalculado.MontoCesantia = montoCesantia;
-                  this.sueldoCalculado.MontoPorCargas = this.asignarCargas();
-                  console.log("this.asignarCargas();", this.asignarCargas())
+                  this.sueldoCalculado.MontoPorCargas = this.montoPorCargas;
+                  console.log("this.asignarCargas();", this.montoPorCargas)
                   console.log("FACTOR EN armar sueldo ", factor)
                   this.sueldoCalculado.impuesto = ((imponible - (montoAfp + montoCesantia + montoIsapre)) * factor) - descontar
-                  this.sueldoCalculado.liquido = imponible - (montoAfp + montoCesantia + parseInt(this.MontoSaludDefinitivo) + this.sueldoCalculado.impuesto)                  
+                  this.sueldoCalculado.liquido = ( parseInt(imponible) + parseInt(this.sueldoCalculado.noImponible) ) - (montoAfp + montoCesantia + parseInt(this.MontoSaludDefinitivo) + this.sueldoCalculado.impuesto)                  
                   console.log("sueldoCalculado", this.sueldoCalculado);
                   this.liquidacion_terminada = true;
                   setTimeout(( )=> {

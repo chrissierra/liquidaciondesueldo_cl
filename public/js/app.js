@@ -2674,6 +2674,7 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 //
 //
 //
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   props: ['parametros', 'afp'],
   mounted: function mounted() {},
@@ -2694,7 +2695,8 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
       montoGratificacionLegal: 0,
       impuestos: [],
       sueldoCalculado: {},
-      liquidacion_terminada: false
+      liquidacion_terminada: false,
+      montoPorCargas: 0
     };
   },
   methods: {
@@ -2725,7 +2727,7 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
         var totalImponible = tributable + _this.diferencia_salud;
         _this.impuestos = response.data;
 
-        _this.desdeBaseDarLiquidoDefinito(totalImponible, coficienteAFPISAPRE, cesantia, _this.sueldoLiquidoPactado, coficienteAFPISAPRE + cesantia, _this.PrevisionSeleccionada / 100, 0.07, _this.Parametros);
+        _this.desdeBaseDarLiquidoDefinito(totalImponible - _this.totalNoImponible, coficienteAFPISAPRE, cesantia, _this.sueldoLiquidoPactado, coficienteAFPISAPRE + cesantia, _this.PrevisionSeleccionada / 100, 0.07, _this.Parametros);
       });
     },
     analizarSiFun: function analizarSiFun(descuentosIsapre_en_funcion) {
@@ -2778,7 +2780,7 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
       }
 
       console.log("montoPorCargas", montoPorCargas);
-      return montoPorCargas;
+      this.montoPorCargas = montoPorCargas;
     },
     desdeBaseDarLiquidoDefinito: function desdeBaseDarLiquidoDefinito(imponible_preliminar, coef_afpsalud, coef_cesantia, LiqPactado, coef_universal, afp, salud, parametros) {
       var _this2 = this;
@@ -2795,6 +2797,7 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
     porFormula: function porFormula(salud, afp, cesantiaFactor, factor, descontar, liquido, coefAFPISAPRE, Parametros, coef_universal) {
       var limiteAFPSALUD = 2242147;
       var limiteCesantia = 3366052;
+      liquido = liquido - this.totalNoImponible;
 
       if (this.fun > 0) {
         var parteArriba = parseInt(liquido) + parseInt(this.MontoSaludDefinitivo) - parseInt(descontar);
@@ -2846,6 +2849,8 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
     armarSueldoDesdeImponible: function armarSueldoDesdeImponible(imponible, montoAfp, montoIsapre, montoCesantia, factor, descontar) {
       var _this3 = this;
 
+      this.asignarCargas();
+
       if (imponible / 1.25 * 0.25 > 119146) {
         this.sueldoCalculado.sueldoBase = imponible - 119146;
         this.sueldoCalculado.montoGratificacionLegal = 119146;
@@ -2860,16 +2865,16 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
         this.sueldoCalculado.adicionalIsapre = 0;
       }
 
-      this.sueldoCalculado.noImponible = this.asignarCargas() * 1 + this.totalNoImponible * 1;
+      this.sueldoCalculado.noImponible = this.montoPorCargas * 1 + this.totalNoImponible * 1;
       this.sueldoCalculado.imponible = imponible;
       this.sueldoCalculado.MontoAfp = montoAfp;
       this.sueldoCalculado.MontoIsapre = parseInt(this.MontoSaludDefinitivo);
       this.sueldoCalculado.MontoCesantia = montoCesantia;
-      this.sueldoCalculado.MontoPorCargas = this.asignarCargas();
-      console.log("this.asignarCargas();", this.asignarCargas());
+      this.sueldoCalculado.MontoPorCargas = this.montoPorCargas;
+      console.log("this.asignarCargas();", this.montoPorCargas);
       console.log("FACTOR EN armar sueldo ", factor);
       this.sueldoCalculado.impuesto = (imponible - (montoAfp + montoCesantia + montoIsapre)) * factor - descontar;
-      this.sueldoCalculado.liquido = imponible - (montoAfp + montoCesantia + parseInt(this.MontoSaludDefinitivo) + this.sueldoCalculado.impuesto);
+      this.sueldoCalculado.liquido = parseInt(imponible) + parseInt(this.sueldoCalculado.noImponible) - (montoAfp + montoCesantia + parseInt(this.MontoSaludDefinitivo) + this.sueldoCalculado.impuesto);
       console.log("sueldoCalculado", this.sueldoCalculado);
       this.liquidacion_terminada = true;
       setTimeout(function () {
@@ -40533,7 +40538,66 @@ var render = function() {
                 })
               ]),
               _vm._v(" "),
-              _vm._m(1),
+              _c("div", { staticClass: "form-group" }, [
+                _c("label", { attrs: { for: "Tramocargas" } }, [
+                  _vm._v("Tramo Cargas")
+                ]),
+                _vm._v(" "),
+                _c(
+                  "select",
+                  {
+                    directives: [
+                      {
+                        name: "model",
+                        rawName: "v-model",
+                        value: _vm.Tramocargas,
+                        expression: "Tramocargas"
+                      }
+                    ],
+                    staticClass: "form-control",
+                    attrs: { id: "Tramo" },
+                    on: {
+                      change: function($event) {
+                        var $$selectedVal = Array.prototype.filter
+                          .call($event.target.options, function(o) {
+                            return o.selected
+                          })
+                          .map(function(o) {
+                            var val = "_value" in o ? o._value : o.value
+                            return val
+                          })
+                        _vm.Tramocargas = $event.target.multiple
+                          ? $$selectedVal
+                          : $$selectedVal[0]
+                      }
+                    }
+                  },
+                  [
+                    _c("option", { attrs: { value: "0" } }, [
+                      _vm._v("Sin Cargas")
+                    ]),
+                    _vm._v(" "),
+                    _c("option", { attrs: { value: "1" } }, [
+                      _vm._v("Tramo 1")
+                    ]),
+                    _vm._v(" "),
+                    _c("option", { attrs: { value: "2" } }, [
+                      _vm._v("Tramo 2")
+                    ]),
+                    _vm._v(" "),
+                    _c("option", { attrs: { value: "3" } }, [_vm._v("Tramo 3")])
+                  ]
+                ),
+                _vm._v(" "),
+                _c(
+                  "small",
+                  {
+                    staticClass: "form-text text-muted",
+                    attrs: { id: "tramoAyuda" }
+                  },
+                  [_vm._v("Si no tiene cargas, no consideres éste campo")]
+                )
+              ]),
               _vm._v(" "),
               _c("div", { staticClass: "form-group mb-5" }, [
                 _c("label", { attrs: { for: "GratificacionLegal" } }, [
@@ -40651,28 +40715,6 @@ var staticRenderFns = [
           )
         ])
       ])
-    ])
-  },
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "form-group" }, [
-      _c("label", { attrs: { for: "Tramocargas" } }, [_vm._v("Tramo Cargas")]),
-      _vm._v(" "),
-      _c("select", { staticClass: "form-control", attrs: { id: "Tramo" } }, [
-        _c("option", { attrs: { value: "1" } }, [_vm._v("Tramo 1")]),
-        _vm._v(" "),
-        _c("option", { attrs: { value: "2" } }, [_vm._v("Tramo 2")]),
-        _vm._v(" "),
-        _c("option", { attrs: { value: "3" } }, [_vm._v("Tramo 3")])
-      ]),
-      _vm._v(" "),
-      _c(
-        "small",
-        { staticClass: "form-text text-muted", attrs: { id: "tramoAyuda" } },
-        [_vm._v("Si no tiene cargas, no consideres éste campo")]
-      )
     ])
   }
 ]
