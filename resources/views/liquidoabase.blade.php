@@ -6,7 +6,7 @@
         <link href="https://fonts.googleapis.com/css?family=Roboto+Mono|Roboto:400,700,900&display=swap" rel="stylesheet">
         <title>Liquidacion de sueldo</title>
         <link rel="stylesheet" href="{{ URL::asset('css/app.css') }}">
-
+        {!! SEO::generate() !!}
         <!-- Fonts -->
         <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">
 
