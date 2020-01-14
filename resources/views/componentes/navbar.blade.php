@@ -1,7 +1,8 @@
+        <script src="https://kit.fontawesome.com/761f284d42.js" crossorigin="anonymous"></script>
         <nav class="navbar navbar-expand-lg barra-superior mb-5">
           <a class="navbar-brand" href="./Inicio">Liquidacion de sueldo</a>
-          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation" >
+           <i class="fas fa-bars"></i>
           </button>
           <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
@@ -28,6 +29,10 @@
             background-color: #1c4b82;
             color: #dae1e7;
             font-family: 'Roboto', sans-serif;
+          }
+
+          .fas{
+            color:white;
           }
 
           nav.barra-superior > a.navbar-brand{

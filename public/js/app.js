@@ -2232,6 +2232,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 //
 //
 //
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   props: ['parametros', 'afp'],
   mounted: function mounted() {
@@ -39741,6 +39742,10 @@ var render = function() {
                     }
                   },
                   [
+                    _c("option", { attrs: { value: "0" } }, [
+                      _vm._v("Sin Cargas")
+                    ]),
+                    _vm._v(" "),
                     _c("option", { attrs: { value: "1" } }, [
                       _vm._v("Tramo 1")
                     ]),

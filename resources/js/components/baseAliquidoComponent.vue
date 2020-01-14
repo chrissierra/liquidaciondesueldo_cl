@@ -90,6 +90,7 @@
               <div class="form-group">
                 <label for="Tramo">Tramo Cargas</label>
                 <select v-model="Tramocargas" class="form-control" id="Tramo">
+                  <option value="0">Sin Cargas</option>
                   <option value="1">Tramo 1</option>
                   <option value="2">Tramo 2</option>
                   <option value="3">Tramo 3</option>
