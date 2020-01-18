@@ -11356,3 +11356,41 @@ a.text-dark:focus {
   }
 }
 
+body {
+  background-color: #dae1e7;
+}
+
+.titulo {
+  font-family: "Roboto", monospace;
+  font-weight: 800;
+  color: #183661;
+}
+
+.subtitulo {
+  font-family: "Roboto Mono", monospace;
+}
+
+.card {
+  border-radius: 0.9em;
+}
+
+@media (max-width: 575.98px) {
+  .columna-derecha {
+    border-bottom: solid 1px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Fin media breakpoint dispositivos chicos */
+
+@media (min-width: 992px) {
+  .columna-derecha {
+    border-right: solid 1px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Fin media breakpoint dispositivos medianos */
+
+.tabla_explicacion_masivo {
+  min-width: 10em;
+}
+
