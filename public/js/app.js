@@ -39833,7 +39833,7 @@ var render = function() {
                       },
                       on: { click: _vm.clikeando }
                     },
-                    [_vm._v("Calcular")]
+                    [_vm._v("Calcular sueldo líquido")]
                   )
                 ]
               )
@@ -39871,7 +39871,7 @@ var staticRenderFns = [
     return _c("div", { staticClass: "row mb-5" }, [
       _c("div", { staticClass: "col-12 text-center" }, [
         _c("h2", { staticClass: "titulo mb-4" }, [
-          _vm._v("\n              Obtén tu sueldo líquido\n          ")
+          _vm._v("\n              Calcular sueldo liquido\n          ")
         ])
       ]),
       _vm._v(" "),

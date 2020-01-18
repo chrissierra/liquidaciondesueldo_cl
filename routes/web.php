@@ -56,7 +56,7 @@ Route::get('/Inicio', function () {
 Route::get('/BaseaLiquido', function () {
 	//parametros_desde_bbdd
 
-    SEO::setTitle('Calculo liquidacion de sueldo. Como hacer una liquidacion de sueldo chile');
+    SEO::setTitle('Calculo liquidacion de sueldo. Como hacer una liquidacion de sueldo chile. Calcular sueldo liquido');
     SEO::setDescription('Como hacer una liquidacion de sueldo paso a paso, desde un formulario de la forma mas simple. Ingresa el sueldo base y obtendrás el sueldo líquido y todos los demás componentes de tu liquidación.');
     SEO::opengraph()->setUrl('https://liquidaciondesueldo.cl');
     SEO::setCanonical('https://liquidaciondesueldo.cl');
