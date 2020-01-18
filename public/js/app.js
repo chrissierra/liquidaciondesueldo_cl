@@ -39829,7 +39829,7 @@ var render = function() {
                       staticStyle: {
                         "background-color": "#dd6b4d",
                         border: "solid 0",
-                        width: "10em"
+                        "min-width": "10em"
                       },
                       on: { click: _vm.clikeando }
                     },

@@ -107,7 +107,7 @@
               </div>                             
         
               <div class="ultimo-form-group" style="text-align: center; margin-bottom: 3em;"> 
-                <button style="background-color: #dd6b4d; border: solid 0; width: 10em;" v-on:click="clikeando" class="btn btn-primary">Calcular sueldo líquido</button>
+                <button style="background-color: #dd6b4d; border: solid 0; min-width: 10em;" v-on:click="clikeando" class="btn btn-primary">Calcular sueldo líquido</button>
               </div>
             </form>  
         </div>
