@@ -10,6 +10,9 @@
 | contains the "web" middleware group. Now create something great!
 |
 */
+use Barryvdh\DomPDF\Facade as PDF;
+
+use Illuminate\Http\Request;
 
 Route::get('/', function () {
 	//parametros_desde_bbdd
@@ -88,5 +91,33 @@ Route::get('/Importando', function () {
     SEO::opengraph()->addProperty('type', 'articles');
     SEO::twitter()->setSite('@Liquidaciondesueldo');
     return view('importar');
-});
+
+})->middleware('auth');
+
 Route::post('/MasivoCsvImportacion', 'masivosCsv@importandoCsv')->name("importacion.csv");
+
+
+Route::get('/Descargar_liquidacion', function (Request $request) {
+    
+    //$objeto_liquidaciones = $request->input('objeto_liquidaciones');
+    
+    // Consultar base de datos, según el id de liquidacion . Usar esos datos para generar liquidacion.
+
+    $pdf = PDF::loadView('liquidacion_en_pdf', compact('objeto_liquidaciones'));
+
+    return $pdf->download('listado.pdf');
+    //$request->input('objeto_liquidacion');
+    //return view('importar');
+});
+
+Auth::routes();
+
+Route::get('/home', 'HomeController@index')->name('home');
+
+Route::get('/IngresoImpuestos', function (Request $request) {
+    
+    return view('impuestos.IngresoImpuestos');
+
+})->name('IngresoImpuestos');
+
+Route::post('/IngresandoImpuestos', 'ImpuestosController@ingresarImpuestos')->name('IngresandoImpuestos');

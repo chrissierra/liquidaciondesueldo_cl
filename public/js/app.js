@@ -1958,14 +1958,23 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 //
 /* harmony default export */ __webpack_exports__["default"] = ({
   props: ['datos', 'parametros'],
-  mounted: function mounted() {////console.log(JSON.parse(this.datos)[0]);
+  mounted: function mounted() {
+    console.log(this.parametros);
+    console.log("thisParametros", this.Parametros); ////console.log(JSON.parse(this.datos)[0]);
     //this.Proceso1Sueldos()  
   },
   data: function data() {
     return {
       datosTrabajador: JSON.parse(this.datos)[0],
       impuestos: [],
-      visualizarBooleano: false
+      visualizarBooleano: false,
+      fun: 0,
+      Parametros: JSON.parse(this.parametros)[0],
+      MontoSaludDefinitivo: 0,
+      diferencia_salud: 0,
+      totalNoImponible: 0,
+      PrevisionSeleccionada: 0,
+      montoPorCargas: 0
     };
   },
   methods: {
@@ -1976,10 +1985,9 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
       var _this = this;
 
       this.datosTrabajador.forEach(function (value, key) {
-        //console.log(key)
-        _this.Proceso2Sueldos(value, key); ////console.log(value)
-
-      }); //console.log(this.datosTrabajador)
+        _this.Proceso2Sueldos(value, key);
+      });
+      alert("Funciona....");
     },
     json2array: function json2array(json) {
       var result = [];
@@ -1995,7 +2003,7 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
       });
       return result;
     },
-    Proceso2Sueldos: function Proceso2Sueldos(trabajador, indice) {
+    Proceso2Sueldos: function Proceso2Sueldos(trabajador, indice_trabajador) {
       var _this2 = this;
 
       axios.post('./api/ImpuestosDelMes', {
@@ -2004,84 +2012,226 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
       }, {
         crossdomain: true
       }).then(function (response) {
-        //console.log(trabajador);
         axios.post('./api/AfpPorMes', {
           mes: trabajador.mes,
           anio: trabajador.anio
         }).then(function (afp) {
           // *** Poner catch para error de si no encuentra.
-          console.log("VER IMOIRTANTE AFO", _this2.json2array(afp.data)[0]); //.log(afp.data) 
-
+          _this2.PrevisionSeleccionada = _this2.json2array(afp.data)[trabajador.afp].comision;
+          console.log("VER IMOIRTANTE AFO", _this2.json2array(afp.data));
           console.log("RUT " + trabajador.rut, _this2.json2array(afp.data)[trabajador.afp]);
           var cesantia = trabajador.tipocontrato === 2 ? 0 : 0.006;
           var coficienteUniversal = 1 - (_this2.json2array(afp.data)[trabajador.afp].comision / 100 + 0.07 + cesantia);
           var coficienteAFPISAPRE = 1 - (_this2.json2array(afp.data)[trabajador.afp].comision / 100 + 0.07);
+          var coef_afp = 1 - _this2.json2array(afp.data)[trabajador.afp].comision / 100;
+          var coef_isapre = 1 - 0.07;
+          _this2.totalNoImponible = parseInt(trabajador.movilizacion) + parseInt(trabajador.colacion);
           var tributable = trabajador.liquido - (trabajador.movilizacion + trabajador.colacion);
           coficienteUniversal = coficienteAFPISAPRE + cesantia;
           var descuentosAfpIsapre = tributable / coficienteUniversal * (1 - coficienteAFPISAPRE);
+          var descuento_afp = tributable / coficienteUniversal * (1 - coef_afp);
+          var descuentosIsapre = tributable / coficienteUniversal * (1 - coef_isapre);
           var descuentosCesantia = tributable / coficienteUniversal * cesantia;
-          var totalImponible = tributable + descuentosCesantia + descuentosAfpIsapre;
+          _this2.fun = trabajador.fun;
+
+          _this2.analizarSiFun(descuentosIsapre, tributable);
+
+          _this2.asignarCargas(trabajador.tramo, trabajador.cargas);
+
+          var totalImponible = tributable + _this2.diferencia_salud;
           _this2.impuestos = response.data;
 
-          _this2.desdeBaseDarLiquidoDefinito(totalImponible, coficienteAFPISAPRE, cesantia, tributable, coficienteAFPISAPRE + cesantia, _this2.json2array(afp.data)[trabajador.afp].comision / 100, 0.07, '', indice, _this2.json2array(afp.data)[trabajador.afp]);
+          _this2.desdeBaseDarLiquidoDefinito(totalImponible - _this2.totalNoImponible, coficienteAFPISAPRE, cesantia, trabajador.liquido, coficienteAFPISAPRE + cesantia, _this2.PrevisionSeleccionada / 100, 0.07, _this2.Parametros, indice_trabajador, _this2.json2array(afp.data)[trabajador.afp]);
+          /*
+           *****
+          _____
+           */
+
         });
       });
     },
-    desdeBaseDarLiquidoDefinito: function desdeBaseDarLiquidoDefinito(imponible_preliminar, coef_afpsalud, coef_cesantia, LiqPactado, coef_universal, afp, salud, parametros, indice, afpSeleccionadaObjeto) {
+    analizarSiFun: function analizarSiFun(descuentosIsapre_en_funcion, tributable) {
+      var limiteAFPSALUD = 2272728;
+      var limiteCesantia = 3409091;
+
+      if (limiteAFPSALUD * 0.07 < descuentosIsapre_en_funcion) {
+        descuentosIsapre_en_funcion = limiteAFPSALUD * 0.07;
+      }
+
+      if (this.fun > 0) {
+        var saludFun = parseFloat(this.Parametros.UF * this.fun);
+
+        if (saludFun > descuentosIsapre_en_funcion) {
+          this.MontoSaludDefinitivo = saludFun;
+          console.log("MontoSaludDefinitivo", this.MontoSaludDefinitivo);
+          this.diferencia_salud = Math.abs(saludFun - descuentosIsapre_en_funcion) * 1;
+        } else {
+          this.MontoSaludDefinitivo = descuentosIsapre_en_funcion;
+          console.log("MontoSaludDefinitivo", this.MontoSaludDefinitivo);
+          this.diferencia_salud = 0;
+        }
+      } else {
+        this.MontoSaludDefinitivo = descuentosIsapre_en_funcion;
+        console.log("MontoSaludDefinitivo segundo else.", this.MontoSaludDefinitivo);
+        this.diferencia_salud = 0;
+      }
+
+      console.log("thisdiferenciasalud", this.diferencia_salud);
+    },
+    asignarCargas: function asignarCargas(Tramocargas, cargas) {
+      var montoPorCargas = 0;
+      console.log("this.Tramocargas", Tramocargas);
+      cargas = cargas * 1;
+      console.log("this.cargas", cargas);
+
+      if (Tramocargas == 1) {
+        //console.log("this.Parametros.AsignFamA ", this.Parametros.AsignFamA )
+        this.montoPorCargas = this.Parametros.AsigFamA * cargas;
+      } else if (Tramocargas == 2) {
+        //console.log("this.Parametros.AsignFamA ", this.Parametros.AsignFamB )
+        this.montoPorCargas = this.Parametros.AsigFamB * cargas;
+      } else if (Tramocargas == 3) {
+        //console.log("this.Parametros.AsignFamA ", this.Parametros.AsignFamC )
+        this.montoPorCargas = this.Parametros.AsigFamC * cargas;
+      } else {
+        this.montoPorCargas = 0;
+      }
+
+      console.log("montoPorCargas", this.montoPorCargas);
+      return this.montoPorCargas;
+    },
+    desdeBaseDarLiquidoDefinito: function desdeBaseDarLiquidoDefinito(imponible_preliminar, coef_afpsalud, coef_cesantia, LiqPactado, coef_universal, afp, salud, parametros, indice_trabajador, afpSeleccionadaObjeto) {
       var _this3 = this;
 
-      //console.log("En por desdeBaseDarLiquidoDefinito", this.impuestos)
-      if (this.impuestos[0].desde > imponible_preliminar) return this.porFormula(0.07, afp, coef_cesantia, 0, 0, LiqPactado, coef_afpsalud, parametros, coef_universal, indice, afpSeleccionadaObjeto);
+      var primer_liquido_simulado_por_tabla_imp = parseInt(this.impuestos[0].desde - (this.impuestos[0].desde * this.impuestos[0].factor - this.impuestos[0].cantidadRebajar));
+      if (primer_liquido_simulado_por_tabla_imp > LiqPactado) return this.porFormula(0.07, afp, coef_cesantia, 0, 0, LiqPactado, coef_afpsalud, parametros, coef_universal, indice_trabajador, afpSeleccionadaObjeto);
       this.impuestos.forEach(function (value) {
-        if (imponible_preliminar > value.desde && imponible_preliminar < value.hasta) {
-          return _this3.porFormula(0.07, afp, coef_cesantia, value.factor, value.cantidadRebajar, LiqPactado, coef_afpsalud, parametros, coef_universal, indice, afpSeleccionadaObjeto);
+        var segundo_liquido_simulado_por_tabla_imp_uno = parseInt(value.desde - (value.desde * value.factor - value.cantidadRebajar));
+        var segundo_liquido_simulado_por_tabla_imp_dos = parseInt(value.hasta - (value.hasta * value.factor - value.cantidadRebajar));
+
+        if (LiqPactado > segundo_liquido_simulado_por_tabla_imp_uno && LiqPactado < segundo_liquido_simulado_por_tabla_imp_dos) {
+          _this3.porFormula(0.07, _this3.PrevisionSeleccionada / 100, coef_cesantia, value.factor, value.cantidadRebajar, LiqPactado, coef_afpsalud, parametros, coef_universal, indice_trabajador, afpSeleccionadaObjeto);
         }
       });
     },
     // Fin desdebasedarliquidodefinito
-    porFormula: function porFormula(salud, afp, cesantiaFactor, factor, descontar, liquido, coefAFPISAPRE, Parametros, coef_universal, indice, afpSeleccionadaObjeto) {
-      var limiteAFPSALUD = 2242147;
-      var limiteCesantia = 3366052;
-      var parteArriba = liquido - descontar;
-      var parteAbajo = 1 - (salud + afp + cesantiaFactor + factor) + factor * afp + factor * salud + factor * cesantiaFactor;
-      var sueldo = parteArriba / parteAbajo;
+    porFormula: function porFormula(salud, afp, cesantiaFactor, factor, descontar, liquido, coefAFPISAPRE, Parametros, coef_universal, indice_trabajador, afpSeleccionadaObjeto) {
+      var limiteAFPSALUD = 2272728;
+      var limiteCesantia = 3409091;
+      liquido = liquido - this.totalNoImponible;
+      console.log("this.fun", this.fun);
 
-      if (sueldo > limiteCesantia) {
-        // Listo..!!
-        var tImponible_superior_lim_cesantia = (liquido - factor * limiteAFPSALUD * afp - factor * limiteAFPSALUD * salud - factor * limiteCesantia * cesantiaFactor - descontar + limiteAFPSALUD * afp + limiteAFPSALUD * salud + limiteCesantia * cesantiaFactor) / (1 - factor);
-        this.armarSueldoDesdeImponible(tImponible_superior_lim_cesantia, limiteAFPSALUD * afp, limiteAFPSALUD * salud, limiteCesantia * cesantiaFactor, factor, descontar, indice, afpSeleccionadaObjeto);
-      } else if (sueldo < limiteAFPSALUD) {
-        var descuentos = sueldo * salud + afp * sueldo + cesantiaFactor * sueldo;
-        var liquido_calculado_ = sueldo - descuentos - ((sueldo - descuentos) * factor - descontar); //console.log("Liquido Calculado ", liquido_calculado_);
+      if (this.fun > 0) {
+        var parteArriba = parseInt(liquido) + parseInt(this.MontoSaludDefinitivo) - parseInt(descontar);
+        var parteAbajo = 1 - afp - cesantiaFactor - factor + factor * afp + factor * salud + factor * cesantiaFactor;
+        var sueldo = parteArriba / parteAbajo;
+        console.log("sueldo > limiteCesantia", sueldo > limiteCesantia);
+        console.log("sueldo > ", sueldo);
+        console.log(" > limiteCesantia", limiteCesantia);
 
-        this.armarSueldoDesdeImponible(sueldo, afp * sueldo, sueldo * salud, cesantiaFactor * sueldo, factor, descontar, indice, afpSeleccionadaObjeto);
-      } else if (sueldo > limiteAFPSALUD && sueldo < limiteCesantia) {
-        var parteArriba_entrerangos = liquido - descontar + limiteAFPSALUD * salud + limiteAFPSALUD * afp - limiteAFPSALUD * factor * afp - limiteAFPSALUD * factor * salud;
-        var parteAbajo_entrerangos = 1 - cesantiaFactor - factor + factor * cesantiaFactor;
-        var sueldoEntreRangos = parteArriba_entrerangos / parteAbajo_entrerangos;
-        this.armarSueldoDesdeImponible(sueldoEntreRangos, limiteAFPSALUD * afp, limiteAFPSALUD * salud, cesantiaFactor * sueldoEntreRangos, factor, descontar, indice, afpSeleccionadaObjeto);
+        if (sueldo > limiteCesantia) {
+          // Listo..!!
+          var tImponible_superior_lim_cesantia = (parseInt(liquido) + parseInt(this.MontoSaludDefinitivo) - factor * limiteAFPSALUD * afp - factor * limiteAFPSALUD * salud - factor * limiteCesantia * cesantiaFactor - descontar + limiteAFPSALUD * afp + limiteCesantia * cesantiaFactor) / (1 - factor);
+          this.armarSueldoDesdeImponible(tImponible_superior_lim_cesantia, limiteAFPSALUD * afp, parseInt(limiteAFPSALUD * salud), limiteCesantia * cesantiaFactor, factor, descontar, indice_trabajador, afpSeleccionadaObjeto);
+        } else if (sueldo < limiteAFPSALUD) {
+          //let descuentos = (sueldo*salud) + (afp*sueldo) + (cesantiaFactor*sueldo);
+          //let liquido_calculado_ = sueldo - descuentos - ( ( (sueldo-descuentos)*factor) - descontar  );
+          this.armarSueldoDesdeImponible(sueldo, afp * sueldo, sueldo * salud, cesantiaFactor * sueldo, factor, descontar, indice_trabajador, afpSeleccionadaObjeto);
+        } else if (sueldo > limiteAFPSALUD && sueldo < limiteCesantia) {
+          var parteArriba_entrerangos = liquido - descontar + parseInt(this.MontoSaludDefinitivo) + limiteAFPSALUD * afp - limiteAFPSALUD * factor * afp - limiteAFPSALUD * factor * salud;
+          var parteAbajo_entrerangos = 1 - cesantiaFactor - factor + factor * cesantiaFactor;
+          var sueldoEntreRangos = parteArriba_entrerangos / parteAbajo_entrerangos;
+          this.armarSueldoDesdeImponible(sueldoEntreRangos, limiteAFPSALUD * afp, limiteAFPSALUD * salud, cesantiaFactor * sueldoEntreRangos, factor, descontar, indice_trabajador, afpSeleccionadaObjeto);
+        }
+      } else {
+        var _parteArriba = liquido - descontar;
+
+        console.log("En else, viendo q tiene el liquido", liquido);
+        console.log("En else, viendo q tiene el descontar", descontar);
+
+        var _parteAbajo = 1 - salud - afp - cesantiaFactor - factor + factor * afp + factor * salud + factor * cesantiaFactor;
+
+        console.log("parte arriba", _parteArriba);
+        console.log("parte parteAbajo", _parteAbajo);
+
+        var _sueldo = _parteArriba / _parteAbajo;
+
+        console.log("sueldo > limiteCesantia", _sueldo > limiteCesantia);
+        console.log("sueldo > ", _sueldo);
+        console.log(" > limiteCesantia", limiteCesantia);
+
+        if (_sueldo > limiteCesantia) {
+          // Listo..!!
+          var _tImponible_superior_lim_cesantia = (liquido - factor * limiteAFPSALUD * afp - factor * limiteAFPSALUD * salud - factor * limiteCesantia * cesantiaFactor - descontar + limiteAFPSALUD * afp + limiteAFPSALUD * salud + limiteCesantia * cesantiaFactor) / (1 - factor);
+
+          this.armarSueldoDesdeImponible(_tImponible_superior_lim_cesantia, limiteAFPSALUD * afp, limiteAFPSALUD * salud, limiteCesantia * cesantiaFactor, factor, descontar, indice_trabajador, afpSeleccionadaObjeto);
+        } else if (_sueldo < limiteAFPSALUD) {
+          var descuentos = _sueldo * salud + afp * _sueldo + cesantiaFactor * _sueldo;
+          var liquido_calculado_ = _sueldo - descuentos - ((_sueldo - descuentos) * factor - descontar);
+          this.armarSueldoDesdeImponible(_sueldo, afp * _sueldo, _sueldo * salud, cesantiaFactor * _sueldo, factor, descontar, indice_trabajador, afpSeleccionadaObjeto);
+        } else if (_sueldo > limiteAFPSALUD && _sueldo < limiteCesantia) {
+          var _parteArriba_entrerangos = liquido - descontar + limiteAFPSALUD * salud + limiteAFPSALUD * afp - limiteAFPSALUD * factor * afp - limiteAFPSALUD * factor * salud;
+
+          var _parteAbajo_entrerangos = 1 - cesantiaFactor - factor + factor * cesantiaFactor;
+
+          var _sueldoEntreRangos = _parteArriba_entrerangos / _parteAbajo_entrerangos;
+
+          this.armarSueldoDesdeImponible(_sueldoEntreRangos, limiteAFPSALUD * afp, limiteAFPSALUD * salud, cesantiaFactor * _sueldoEntreRangos, factor, descontar, indice_trabajador, afpSeleccionadaObjeto);
+        }
       }
     },
     // Fin porFormula
-    armarSueldoDesdeImponible: function armarSueldoDesdeImponible(imponible, montoAfp, montoIsapre, montoCesantia, factor, descontar, indice, afpSeleccionadaObjeto) {
-      console.log("EL IMPONIBLE ES.... ", imponible);
+
+    /* armarSueldoDesdeImponible(imponible, montoAfp, montoIsapre, montoCesantia, factor, descontar, indice, afpSeleccionadaObjeto, indice_trabajador){
+        if( (imponible/1.25) * 0.25 > 119146){
+           this.datosTrabajador[indice_trabajador].sueldoBase = imponible - 119146;
+           this.datosTrabajador[indice_trabajador].montoGratificacionLegal = 119146;
+         }else{
+           this.datosTrabajador[indice_trabajador].sueldoBase = imponible /1.25;
+           this.datosTrabajador[indice_trabajador].montoGratificacionLegal = imponible * 0.25;
+          }
+       this.datosTrabajador[indice_trabajador].objetoAfp = afpSeleccionadaObjeto;
+       this.datosTrabajador[indice_trabajador].imponible = imponible;
+       this.datosTrabajador[indice_trabajador].MontoAfp = montoAfp;
+       this.datosTrabajador[indice_trabajador].MontoIsapre = montoIsapre;
+       this.datosTrabajador[indice_trabajador].MontoCesantia = montoCesantia;
+       this.datosTrabajador[indice_trabajador].impuesto = ((imponible - (montoAfp + montoCesantia + montoIsapre)) * factor) - descontar
+       this.datosTrabajador[indice_trabajador].liquido = imponible+this.datosTrabajador[indice_trabajador].colacion + this.datosTrabajador[indice_trabajador].movilizacion - (montoAfp + montoCesantia + montoIsapre + this.datosTrabajador[indice_trabajador].impuesto)                  
+     },*/
+    armarSueldoDesdeImponible: function armarSueldoDesdeImponible(imponible, montoAfp, montoIsapre, montoCesantia, factor, descontar, indice_trabajador, afpSeleccionadaObjeto) {
+      //alert("Adfsasdfasdfasfd")
+      this.asignarCargas(this.datosTrabajador[indice_trabajador].tramo, this.datosTrabajador[indice_trabajador].cargas);
 
       if (imponible / 1.25 * 0.25 > 119146) {
-        this.datosTrabajador[indice].sueldoBase = imponible - 119146;
-        this.datosTrabajador[indice].montoGratificacionLegal = 119146;
+        this.datosTrabajador[indice_trabajador].sueldoBase = imponible - 119146;
+        this.datosTrabajador[indice_trabajador].montoGratificacionLegal = 119146;
       } else {
-        this.datosTrabajador[indice].sueldoBase = imponible / 1.25;
-        this.datosTrabajador[indice].montoGratificacionLegal = imponible * 0.25;
+        this.datosTrabajador[indice_trabajador].sueldoBase = imponible / 1.25;
+        this.datosTrabajador[indice_trabajador].montoGratificacionLegal = imponible * 0.25;
       }
 
-      this.datosTrabajador[indice].objetoAfp = afpSeleccionadaObjeto;
-      this.datosTrabajador[indice].imponible = imponible;
-      this.datosTrabajador[indice].MontoAfp = montoAfp;
-      this.datosTrabajador[indice].MontoIsapre = montoIsapre;
-      this.datosTrabajador[indice].MontoCesantia = montoCesantia;
-      this.datosTrabajador[indice].impuesto = (imponible - (montoAfp + montoCesantia + montoIsapre)) * factor - descontar;
-      this.datosTrabajador[indice].liquido = imponible + this.datosTrabajador[indice].colacion + this.datosTrabajador[indice].movilizacion - (montoAfp + montoCesantia + montoIsapre + this.datosTrabajador[indice].impuesto);
-      console.log("sueldoCalculado", this.datosTrabajador);
+      if (this.fun > 0) {
+        this.datosTrabajador[indice_trabajador].adicionalIsapre = Math.abs(this.Parametros.UF * this.fun - montoIsapre);
+      } else {
+        this.datosTrabajador[indice_trabajador].adicionalIsapre = 0;
+      }
+
+      console.log(afpSeleccionadaObjeto);
+      this.datosTrabajador[indice_trabajador].objetoAfp = afpSeleccionadaObjeto;
+      this.datosTrabajador[indice_trabajador].noImponible = parseInt(this.montoPorCargas + this.totalNoImponible);
+      this.datosTrabajador[indice_trabajador].imponible = imponible;
+      this.datosTrabajador[indice_trabajador].MontoAfp = montoAfp;
+      this.datosTrabajador[indice_trabajador].MontoIsapre = parseInt(this.MontoSaludDefinitivo);
+      this.datosTrabajador[indice_trabajador].MontoCesantia = montoCesantia;
+      this.datosTrabajador[indice_trabajador].MontoPorCargas = this.montoPorCargas;
+      this.datosTrabajador[indice_trabajador].impuesto = (imponible - (montoAfp + montoCesantia + montoIsapre)) * factor - descontar;
+      this.datosTrabajador[indice_trabajador].liquido = parseInt(parseInt(imponible) + parseInt(this.datosTrabajador[indice_trabajador].noImponible)) - (parseInt(montoAfp) + parseInt(montoCesantia) + parseInt(this.MontoSaludDefinitivo) + parseInt(this.datosTrabajador[indice_trabajador].impuesto));
+      console.log("El (this.montoPorCargas)n1", this.montoPorCargas);
+      console.log("el factor usado es.. .", factor);
+      console.log("El descontadoes ", descontar);
+      console.log("E (this.totalNoImponible)", this.totalNoImponible);
+      console.log(this.datosTrabajador[indice_trabajador]);
+      console.log("parseInt(this.datosTrabajador[indice_trabajador].impuesto)", parseInt(this.datosTrabajador[indice_trabajador].impuesto));
     }
   }
 });
@@ -2383,6 +2533,12 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       console.log("sueldoCalculado", this.sueldoCalculado); //setTimeout(( )=> {
 
       this.$refs.metodoDentroDelComponente.verValor(); //}, 500  )
+
+      axios.post('/Descargar_liquidacion', {
+        objeto_liquidaciones: this.sueldoCalculado
+      }).then(function (response) {
+        console.log("espuesta", response);
+      });
     }
   }
 });
@@ -2541,6 +2697,30 @@ __webpack_require__.r(__webpack_exports__);
       this.liquidacion_generada = newQuestion;
       console.log("en watch", newQuestion);
     }
+  }
+});
+
+/***/ }),
+
+/***/ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/liquidacion_vista_pdf.vue?vue&type=script&lang=js&":
+/*!********************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib??ref--4-0!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/liquidacion_vista_pdf.vue?vue&type=script&lang=js& ***!
+  \********************************************************************************************************************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+//
+//
+//
+//
+/* harmony default export */ __webpack_exports__["default"] = ({
+  mounted: function mounted() {
+    console.log('Component mounted.');
+  },
+  methods: {
+    clikeando: function clikeando() {}
   }
 });
 
@@ -2732,6 +2912,13 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
       });
     },
     analizarSiFun: function analizarSiFun(descuentosIsapre_en_funcion) {
+      var limiteAFPSALUD = 2272728;
+      var limiteCesantia = 3409091;
+
+      if (limiteAFPSALUD * 0.07 < descuentosIsapre_en_funcion) {
+        descuentosIsapre_en_funcion = limiteAFPSALUD * 0.07;
+      }
+
       if (this.fun > 0) {
         var saludFun = parseFloat(this.Parametros.UF * this.fun);
 
@@ -2786,10 +2973,13 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
     desdeBaseDarLiquidoDefinito: function desdeBaseDarLiquidoDefinito(imponible_preliminar, coef_afpsalud, coef_cesantia, LiqPactado, coef_universal, afp, salud, parametros) {
       var _this2 = this;
 
-      console.log("imponible_preliminar en desdebasedarliquido *****", imponible_preliminar);
-      if (this.impuestos[0].desde > imponible_preliminar) return this.porFormula(0.07, afp, coef_cesantia, 0, 0, LiqPactado, coef_afpsalud, parametros, coef_universal);
+      var primer_liquido_simulado_por_tabla_imp = parseInt(this.impuestos[0].desde - (this.impuestos[0].desde * this.impuestos[0].factor - this.impuestos[0].cantidadRebajar));
+      if (primer_liquido_simulado_por_tabla_imp > LiqPactado) return this.porFormula(0.07, afp, coef_cesantia, 0, 0, LiqPactado, coef_afpsalud, parametros, coef_universal);
       this.impuestos.forEach(function (value) {
-        if (imponible_preliminar > value.desde && imponible_preliminar < value.hasta) {
+        var segundo_liquido_simulado_por_tabla_imp_uno = parseInt(value.desde - (value.desde * value.factor - value.cantidadRebajar));
+        var segundo_liquido_simulado_por_tabla_imp_dos = parseInt(value.hasta - (value.hasta * value.factor - value.cantidadRebajar));
+
+        if (LiqPactado > segundo_liquido_simulado_por_tabla_imp_uno && LiqPactado < segundo_liquido_simulado_por_tabla_imp_dos) {
           _this2.porFormula(0.07, _this2.PrevisionSeleccionada / 100, coef_cesantia, value.factor, value.cantidadRebajar, LiqPactado, coef_afpsalud, parametros, coef_universal);
         }
       });
@@ -39219,19 +39409,9 @@ var render = function() {
                         )
                       ]),
                       _vm._v(" "),
-                      _c("td", [
-                        _vm._v(
-                          _vm._s(_vm._f("aproximar")(trabajador.colacion, 0))
-                        )
-                      ]),
+                      _c("td", [_vm._v(_vm._s(trabajador.colacion))]),
                       _vm._v(" "),
-                      _c("td", [
-                        _vm._v(
-                          _vm._s(
-                            _vm._f("aproximar")(trabajador.movilizacion, 0)
-                          )
-                        )
-                      ])
+                      _c("td", [_vm._v(_vm._s(trabajador.movilizacion))])
                     ])
                   }),
                   0
@@ -40203,6 +40383,42 @@ var staticRenderFns = [
     ])
   }
 ]
+render._withStripped = true
+
+
+
+/***/ }),
+
+/***/ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/liquidacion_vista_pdf.vue?vue&type=template&id=b3dde720&":
+/*!************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/liquidacion_vista_pdf.vue?vue&type=template&id=b3dde720& ***!
+  \************************************************************************************************************************************************************************************************************************/
+/*! exports provided: render, staticRenderFns */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "render", function() { return render; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return staticRenderFns; });
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c(
+    "button",
+    {
+      staticClass: "btn btn-primary",
+      staticStyle: {
+        "background-color": "#dd6b4d",
+        border: "solid 0",
+        "min-width": "10em"
+      },
+      on: { click: _vm.clikeando }
+    },
+    [_vm._v("Calcular sueldo líquido")]
+  )
+}
+var staticRenderFns = []
 render._withStripped = true
 
 
@@ -52917,6 +53133,7 @@ Vue.component('procesado-importable', __webpack_require__(/*! ./components/Proce
 Vue.component('liquidacion-plana', __webpack_require__(/*! ./components/liquidacionPlanaComponent.vue */ "./resources/js/components/liquidacionPlanaComponent.vue")["default"]);
 Vue.component('liquidacion-full', __webpack_require__(/*! ./components/liquidacionFullComponent.vue */ "./resources/js/components/liquidacionFullComponent.vue")["default"]);
 Vue.component('base-a-liquido', __webpack_require__(/*! ./components/baseAliquidoComponent.vue */ "./resources/js/components/baseAliquidoComponent.vue")["default"]);
+Vue.component('liquidacion-pdf', __webpack_require__(/*! ./components/liquidacion_vista_pdf.vue */ "./resources/js/components/liquidacion_vista_pdf.vue")["default"]);
 Vue.filter('aproximar', function (monto, limite) {
   return new Intl.NumberFormat().format(monto.toFixed(limite));
 });
@@ -53337,6 +53554,75 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_liquidacionPlanaComponent_vue_vue_type_template_id_f586e458___WEBPACK_IMPORTED_MODULE_0__["render"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_liquidacionPlanaComponent_vue_vue_type_template_id_f586e458___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
+
+
+
+/***/ }),
+
+/***/ "./resources/js/components/liquidacion_vista_pdf.vue":
+/*!***********************************************************!*\
+  !*** ./resources/js/components/liquidacion_vista_pdf.vue ***!
+  \***********************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _liquidacion_vista_pdf_vue_vue_type_template_id_b3dde720___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./liquidacion_vista_pdf.vue?vue&type=template&id=b3dde720& */ "./resources/js/components/liquidacion_vista_pdf.vue?vue&type=template&id=b3dde720&");
+/* harmony import */ var _liquidacion_vista_pdf_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./liquidacion_vista_pdf.vue?vue&type=script&lang=js& */ "./resources/js/components/liquidacion_vista_pdf.vue?vue&type=script&lang=js&");
+/* empty/unused harmony star reexport *//* harmony import */ var _node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../node_modules/vue-loader/lib/runtime/componentNormalizer.js */ "./node_modules/vue-loader/lib/runtime/componentNormalizer.js");
+
+
+
+
+
+/* normalize component */
+
+var component = Object(_node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_2__["default"])(
+  _liquidacion_vista_pdf_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__["default"],
+  _liquidacion_vista_pdf_vue_vue_type_template_id_b3dde720___WEBPACK_IMPORTED_MODULE_0__["render"],
+  _liquidacion_vista_pdf_vue_vue_type_template_id_b3dde720___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"],
+  false,
+  null,
+  null,
+  null
+  
+)
+
+/* hot reload */
+if (false) { var api; }
+component.options.__file = "resources/js/components/liquidacion_vista_pdf.vue"
+/* harmony default export */ __webpack_exports__["default"] = (component.exports);
+
+/***/ }),
+
+/***/ "./resources/js/components/liquidacion_vista_pdf.vue?vue&type=script&lang=js&":
+/*!************************************************************************************!*\
+  !*** ./resources/js/components/liquidacion_vista_pdf.vue?vue&type=script&lang=js& ***!
+  \************************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_babel_loader_lib_index_js_ref_4_0_node_modules_vue_loader_lib_index_js_vue_loader_options_liquidacion_vista_pdf_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib??ref--4-0!../../../node_modules/vue-loader/lib??vue-loader-options!./liquidacion_vista_pdf.vue?vue&type=script&lang=js& */ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/liquidacion_vista_pdf.vue?vue&type=script&lang=js&");
+/* empty/unused harmony star reexport */ /* harmony default export */ __webpack_exports__["default"] = (_node_modules_babel_loader_lib_index_js_ref_4_0_node_modules_vue_loader_lib_index_js_vue_loader_options_liquidacion_vista_pdf_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__["default"]); 
+
+/***/ }),
+
+/***/ "./resources/js/components/liquidacion_vista_pdf.vue?vue&type=template&id=b3dde720&":
+/*!******************************************************************************************!*\
+  !*** ./resources/js/components/liquidacion_vista_pdf.vue?vue&type=template&id=b3dde720& ***!
+  \******************************************************************************************/
+/*! exports provided: render, staticRenderFns */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_liquidacion_vista_pdf_vue_vue_type_template_id_b3dde720___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!../../../node_modules/vue-loader/lib??vue-loader-options!./liquidacion_vista_pdf.vue?vue&type=template&id=b3dde720& */ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/liquidacion_vista_pdf.vue?vue&type=template&id=b3dde720&");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_liquidacion_vista_pdf_vue_vue_type_template_id_b3dde720___WEBPACK_IMPORTED_MODULE_0__["render"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_liquidacion_vista_pdf_vue_vue_type_template_id_b3dde720___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
 
 
 

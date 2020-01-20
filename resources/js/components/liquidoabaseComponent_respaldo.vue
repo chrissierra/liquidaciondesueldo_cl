@@ -214,12 +214,24 @@
 
                       return result;
                 },
-                desdeBaseDarLiquidoDefinito(imponible_preliminar, coef_afpsalud, coef_cesantia, LiqPactado, coef_universal, afp, salud, parametros){
-                  if(this.impuestos[0].desde > imponible_preliminar)   return this.porFormula((0.07),afp,coef_cesantia, 0, 0, LiqPactado, coef_afpsalud, parametros, coef_universal );
+                desdeBaseDarLiquidoDefinito(imponible_preliminar, coef_afpsalud, coef_cesantia, LiqPactado, coef_universal, afp, salud, parametros ){
+                  
+                  let primer_liquido_simulado_por_tabla_imp = parseInt((this.impuestos[0].desde - (( this.impuestos[0].desde * this.impuestos[0].factor ) -  this.impuestos[0].cantidadRebajar)));
+
+                  if(  primer_liquido_simulado_por_tabla_imp  > LiqPactado)   return this.porFormula((0.07) ,afp,coef_cesantia, 0, 0, LiqPactado, coef_afpsalud, parametros, coef_universal, );
+
+                  
+
 
                   this.impuestos.forEach(value => {
               
-                    if(imponible_preliminar > value.desde && imponible_preliminar < value.hasta){
+
+                    let segundo_liquido_simulado_por_tabla_imp_uno = parseInt((value.desde - (( value.desde * value.factor ) -  value.cantidadRebajar)));
+
+                    let segundo_liquido_simulado_por_tabla_imp_dos = parseInt((value.hasta - (( value.hasta * value.factor ) -  value.cantidadRebajar)));
+
+
+                    if(LiqPactado > segundo_liquido_simulado_por_tabla_imp_uno && LiqPactado < segundo_liquido_simulado_por_tabla_imp_dos){
                       
                       this.porFormula((0.07), (this.PrevisionSeleccionada/100),coef_cesantia, value.factor, value.cantidadRebajar, LiqPactado, coef_afpsalud, parametros, coef_universal);
 

@@ -181,11 +181,6 @@
 
                 },
                 analizarSiFun(descuentosIsapre_en_funcion){
-                  let limiteAFPSALUD = 2272728;
-                  let limiteCesantia = 3409091;
-                  if(limiteAFPSALUD * 0.07 < descuentosIsapre_en_funcion ){
-                    descuentosIsapre_en_funcion = limiteAFPSALUD * 0.07;
-                  }
                   if( this.fun > 0 ){
 
                     let saludFun = parseFloat(this.Parametros.UF * this.fun);
@@ -245,24 +240,15 @@
                   console.log("montoPorCargas", montoPorCargas)
                   this.montoPorCargas = montoPorCargas;
                 },
-                desdeBaseDarLiquidoDefinito(imponible_preliminar, coef_afpsalud, coef_cesantia, LiqPactado, coef_universal, afp, salud, parametros ){
+                desdeBaseDarLiquidoDefinito(imponible_preliminar, coef_afpsalud, coef_cesantia, LiqPactado, coef_universal, afp, salud, parametros){
                   
-                  let primer_liquido_simulado_por_tabla_imp = parseInt((this.impuestos[0].desde - (( this.impuestos[0].desde * this.impuestos[0].factor ) -  this.impuestos[0].cantidadRebajar)));
+                  console.log("imponible_preliminar en desdebasedarliquido *****", imponible_preliminar)
 
-                  if(  primer_liquido_simulado_por_tabla_imp  > LiqPactado)   return this.porFormula((0.07) ,afp,coef_cesantia, 0, 0, LiqPactado, coef_afpsalud, parametros, coef_universal, );
-
-                  
-
+                  if(this.impuestos[0].desde > imponible_preliminar)   return this.porFormula((0.07),afp,coef_cesantia, 0, 0, LiqPactado, coef_afpsalud, parametros, coef_universal );
 
                   this.impuestos.forEach(value => {
               
-
-                    let segundo_liquido_simulado_por_tabla_imp_uno = parseInt((value.desde - (( value.desde * value.factor ) -  value.cantidadRebajar)));
-
-                    let segundo_liquido_simulado_por_tabla_imp_dos = parseInt((value.hasta - (( value.hasta * value.factor ) -  value.cantidadRebajar)));
-
-
-                    if(LiqPactado > segundo_liquido_simulado_por_tabla_imp_uno && LiqPactado < segundo_liquido_simulado_por_tabla_imp_dos){
+                    if(imponible_preliminar > value.desde && imponible_preliminar < value.hasta){
                       
                       this.porFormula((0.07), (this.PrevisionSeleccionada/100),coef_cesantia, value.factor, value.cantidadRebajar, LiqPactado, coef_afpsalud, parametros, coef_universal);
 

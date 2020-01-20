@@ -306,8 +306,16 @@
                   console.log("sueldoCalculado", this.sueldoCalculado);
                   
                   //setTimeout(( )=> {
-                    this.$refs.metodoDentroDelComponente.verValor();
+                  this.$refs.metodoDentroDelComponente.verValor();
                   //}, 500  )
+                    axios
+                    .post('/Descargar_liquidacion', { objeto_liquidaciones: this.sueldoCalculado })
+                    .then(response => {
+
+                      console.log("espuesta", response)
+
+                    });
+
 
                 }
         }

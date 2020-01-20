@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-154973674-2"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-154973674-2');
+  </script>
+      
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link href="https://fonts.googleapis.com/css?family=Roboto+Mono|Roboto:400,700,900&display=swap" rel="stylesheet">
@@ -11,7 +21,11 @@
         <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">
 
     </head>
-    
+    <style type="text/css">
+        .tabla_explicacion_masivo{
+            min-width: 100em;
+        }
+    </style>
 
 
 
@@ -22,7 +36,7 @@
         @endcomponent
 
 
-<div class="container">
+<div class="container mb-5">
     <div class="card">
   <div class="card-body">
 
@@ -45,20 +59,20 @@
                 <table class="table table-sm">
                     <thead>
                         <tr>
-                          <th scope="col tabla_explicacion_masivo">Nombre</th>
-                          <th scope="col tabla_explicacion_masivo">Apellido</th>
-                          <th scope="col tabla_explicacion_masivo">Liquido</th>
-                          <th scope="col tabla_explicacion_masivo">Movilizacion</th>
-                          <th scope="col tabla_explicacion_masivo">Colacion</th>
+                          <th scope="col tabla_explicacion_masivo " style="min-width: 10em;">Nombre</th>
+                          <th scope="col tabla_explicacion_masivo " style="min-width: 10em;">Apellido</th>
+                          <th scope="col tabla_explicacion_masivo " style="min-width: 10em;">Liquido</th>
+                          <th scope="col tabla_explicacion_masivo " style="min-width: 10em;">Movilizacion</th>
+                          <th scope="col tabla_explicacion_masivo " style="min-width: 10em;">Colacion</th>
                           <th scope="col tabla_explicacion_masivo" style="min-width: 10em;">AFP</th>
-                          <th scope="col tabla_explicacion_masivo">Isapre</th>  
-                          <th scope="col tabla_explicacion_masivo">Fun</th>
-                          <th scope="col tabla_explicacion_masivo">TipoContrato</th>
-                          <th scope="col tabla_explicacion_masivo">Cargas</th>
-                          <th scope="col tabla_explicacion_masivo">Tramo</th>
-                          <th scope="col tabla_explicacion_masivo">Mes</th>
-                          <th scope="col tabla_explicacion_masivo">Anio</th>
-                          <th scope="col tabla_explicacion_masivo">Gratificacion</th>
+                          <th scope="col tabla_explicacion_masivo" style="min-width: 10em;">Isapre</th>  
+                          <th scope="col tabla_explicacion_masivo" style="min-width: 10em;">Fun</th>
+                          <th scope="col tabla_explicacion_masivo" style="min-width: 10em;">TipoContrato</th>
+                          <th scope="col tabla_explicacion_masivo" style="min-width: 10em;">Cargas</th>
+                          <th scope="col tabla_explicacion_masivo" style="min-width: 10em;">Tramo</th>
+                          <th scope="col tabla_explicacion_masivo" style="min-width: 10em;">Mes</th>
+                          <th scope="col tabla_explicacion_masivo" style="min-width: 10em;">Anio</th>
+                          <th scope="col tabla_explicacion_masivo" style="min-width: 10em;">Gratificacion</th>
                         </tr>
                     </thead>
                     <tbody>

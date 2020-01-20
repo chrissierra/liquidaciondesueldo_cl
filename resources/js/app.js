@@ -26,6 +26,7 @@ Vue.component('liquidacion-plana', require('./components/liquidacionPlanaCompone
 Vue.component('liquidacion-full', require('./components/liquidacionFullComponent.vue').default);
 Vue.component('base-a-liquido', require('./components/baseAliquidoComponent.vue').default);
 
+Vue.component('liquidacion-pdf', require('./components/liquidacion_vista_pdf.vue').default);
 
 Vue.filter('aproximar', function (monto, limite) {
     return new Intl.NumberFormat().format(monto.toFixed(limite));
@@ -34,7 +35,6 @@ Vue.filter('aproximar', function (monto, limite) {
 Vue.filter('aproximarConPeso', function (monto, limite) {
     return "$" + new  Intl.NumberFormat("de-DE").format(monto.toFixed(limite));
 });
-
 /**
  * Next, we will create a fresh Vue application instance and attach it to
  * the page. Then, you may begin adding components to this application

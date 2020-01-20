@@ -51,16 +51,16 @@
                   <td >{{ trabajador.liquido | aproximar(0)  }}</td>
                   <td >{{ trabajador.montoGratificacionLegal | aproximar(0)  }}</td>
                   <td >{{ trabajador.sueldoBase | aproximar(0) }} </td>
-                  <td >{{ trabajador.imponible | aproximar(0)  }} </td>
+                  <td >{{ trabajador.imponible  | aproximar(0) }} </td>
                   <td >{{ trabajador.mes }}</td>
                   <td >{{ trabajador.anio }}</td>
                   <td >{{ trabajador.objetoAfp.nombre_afp }}</td>
-                  <td >{{ trabajador.MontoAfp | aproximar(0)  }} </td>
-                  <td >{{ trabajador.MontoIsapre | aproximar(0)  }} </td>
+                  <td >{{ trabajador.MontoAfp  | aproximar(0) }} </td>
+                  <td >{{ trabajador.MontoIsapre  | aproximar(0) }} </td>
                   <td >{{ trabajador.MontoCesantia | aproximar(0)  }}</td>
                   <td >{{ trabajador.impuesto | aproximar(0)  }}</td>
-                  <td >{{ trabajador.colacion | aproximar(0)  }}</td>
-                  <td >{{ trabajador.movilizacion | aproximar(0)  }}</td>
+                  <td >{{ trabajador.colacion   }}</td>
+                  <td >{{ trabajador.movilizacion   }}</td>
                 </tr>
 
               </tbody>
@@ -79,7 +79,8 @@
     export default {
       props:['datos','parametros'],
         mounted() {
-          
+          console.log(this.parametros)
+          console.log("thisParametros", this.Parametros);
           ////console.log(JSON.parse(this.datos)[0]);
           //this.Proceso1Sueldos()  
 
@@ -88,31 +89,32 @@
             return{
               datosTrabajador: JSON.parse(this.datos)[0],
               impuestos: [],
-              visualizarBooleano: false
+              visualizarBooleano: false,
+              fun:0,
+              Parametros: JSON.parse(this.parametros)[0],
+              MontoSaludDefinitivo:0,
+              diferencia_salud:0,
+              totalNoImponible: 0,
+              PrevisionSeleccionada:0,
+              montoPorCargas:0
             }
         },  
         methods: {
 
                 VisualizarResultado(){
                   this.visualizarBooleano = true;
-                },
-                
+                },               
                 Proceso1Sueldos(){
 
                     this.datosTrabajador.forEach( (value, key) => {
                       
-                      //console.log(key)
                       this.Proceso2Sueldos(value, key);
 
-                      ////console.log(value)
-                    })
+                    });
 
-
-                    //console.log(this.datosTrabajador)
-
+                    alert("Funciona....")
 
                 },
-
                 json2array(json){
                       var result = [];
                       Object.entries(json).forEach(([key, value]) => {                            
@@ -125,20 +127,20 @@
                       return result;
                 },
 
-                Proceso2Sueldos(trabajador, indice){
+                Proceso2Sueldos(trabajador, indice_trabajador){
 
                     axios
                     .post('./api/ImpuestosDelMes', {mes:trabajador.mes, anio:trabajador.anio}, { crossdomain: true })
                     .then(response => {
 
-                        //console.log(trabajador);
-
                       axios
                       .post('./api/AfpPorMes', {mes: trabajador.mes, anio: trabajador.anio})
                       .then(afp => {  
                         // *** Poner catch para error de si no encuentra.
-                        console.log("VER IMOIRTANTE AFO", this.json2array(afp.data)[0])
-                      //.log(afp.data) 
+                        this.PrevisionSeleccionada = this.json2array(afp.data)[trabajador.afp].comision;
+
+                        console.log("VER IMOIRTANTE AFO", this.json2array(afp.data))
+
                         console.log("RUT "+ trabajador.rut, this.json2array(afp.data)[trabajador.afp]) 
                         
                         let cesantia = trabajador.tipocontrato === 2 ? 0 : 0.006;
@@ -147,21 +149,46 @@
                         
                         let coficienteAFPISAPRE = 1 - ((this.json2array(afp.data)[trabajador.afp].comision/100) + 0.07 )
                         
+                        let coef_afp = 1 - ((this.json2array(afp.data)[trabajador.afp].comision/100) )
+                        
+                        let coef_isapre = 1 - ( 0.07 );           
+
+                        this.totalNoImponible =  parseInt(trabajador.movilizacion)  + parseInt(trabajador.colacion);                                 
+
                         let tributable = (trabajador.liquido - (trabajador.movilizacion  + trabajador.colacion) );
                         
-                        coficienteUniversal = coficienteAFPISAPRE + cesantia;
+                        coficienteUniversal = coficienteAFPISAPRE + cesantia;                        
                         
                         let descuentosAfpIsapre = (tributable / coficienteUniversal) * (1-coficienteAFPISAPRE);
+
+                        let descuento_afp = (tributable / coficienteUniversal) * (1-coef_afp);
                         
+                        let descuentosIsapre = (tributable / coficienteUniversal) * (1-coef_isapre);
+                       
                         let descuentosCesantia = (tributable / coficienteUniversal) * cesantia;
 
-                        let totalImponible = tributable + descuentosCesantia + descuentosAfpIsapre;
+                        this.fun = trabajador.fun;
+
+                        this.analizarSiFun(descuentosIsapre, tributable);
+
+                        this.asignarCargas(trabajador.tramo, trabajador.cargas);
+
+                        let totalImponible = tributable + this.diferencia_salud;
 
                         this.impuestos = response.data;
 
+                        this.desdeBaseDarLiquidoDefinito((totalImponible - this.totalNoImponible), coficienteAFPISAPRE, cesantia, trabajador.liquido, coficienteAFPISAPRE+cesantia, (this.PrevisionSeleccionada/100), 0.07, this.Parametros, indice_trabajador, this.json2array(afp.data)[trabajador.afp]);
+
+                        /*
+
+                        *****
+                        _____
+
+                        */
 
 
-                        this.desdeBaseDarLiquidoDefinito(totalImponible, coficienteAFPISAPRE, cesantia, tributable, coficienteAFPISAPRE+cesantia, (this.json2array(afp.data)[trabajador.afp].comision/100), 0.07, '', indice, this.json2array(afp.data)[trabajador.afp]); 
+
+
 
 
                      });
@@ -170,78 +197,238 @@
 
 
                     });
-                },
-
-                desdeBaseDarLiquidoDefinito(imponible_preliminar, coef_afpsalud, coef_cesantia, LiqPactado, coef_universal, afp, salud, parametros, indice, afpSeleccionadaObjeto){
-                    //console.log("En por desdeBaseDarLiquidoDefinito", this.impuestos)
-
-                  if(this.impuestos[0].desde > imponible_preliminar)   return this.porFormula((0.07),afp,coef_cesantia, 0, 0, LiqPactado, coef_afpsalud, parametros, coef_universal, indice, afpSeleccionadaObjeto);
-
-                  this.impuestos.forEach(value => {
-                    if(imponible_preliminar > value.desde && imponible_preliminar < value.hasta){
-
-
-                      return this.porFormula((0.07),afp,coef_cesantia, value.factor, value.cantidadRebajar, LiqPactado, coef_afpsalud, parametros, coef_universal, indice, afpSeleccionadaObjeto);
-
-                    }
-
-                  });
-
-                   
-              
-                }, // Fin desdebasedarliquidodefinito
-                porFormula(salud, afp, cesantiaFactor,factor, descontar, liquido, coefAFPISAPRE, Parametros, coef_universal, indice, afpSeleccionadaObjeto){
-                 
-                  let limiteAFPSALUD = 2242147;
-                  let limiteCesantia = 3366052;
-                  let parteArriba = liquido - descontar;
-                  let parteAbajo = (1 - (salud + afp + cesantiaFactor + factor)) + (factor*afp) + (factor*salud) + (factor * cesantiaFactor);
-                  let sueldo = parteArriba / parteAbajo;
-
-                  if(sueldo > limiteCesantia){
-                    // Listo..!!
-                    let tImponible_superior_lim_cesantia = (((liquido - (factor*limiteAFPSALUD*afp) - (factor*limiteAFPSALUD*salud)-(factor*limiteCesantia*cesantiaFactor))-descontar + (limiteAFPSALUD*afp) + (limiteAFPSALUD*salud)+(limiteCesantia*cesantiaFactor))/     ( 1-factor))
-
-                    this.armarSueldoDesdeImponible(tImponible_superior_lim_cesantia, limiteAFPSALUD*afp, limiteAFPSALUD*salud, limiteCesantia*cesantiaFactor ,factor, descontar, indice, afpSeleccionadaObjeto)
-                  
-                  }else if(sueldo < limiteAFPSALUD){
-                      
-                      let descuentos = (sueldo*salud) + (afp*sueldo) + (cesantiaFactor*sueldo);
-                      let liquido_calculado_ = sueldo - descuentos - ( ( (sueldo-descuentos)*factor) - descontar  );
-                      //console.log("Liquido Calculado ", liquido_calculado_);
-                      this.armarSueldoDesdeImponible(sueldo, (afp*sueldo), (sueldo*salud), (cesantiaFactor*sueldo) ,factor, descontar, indice, afpSeleccionadaObjeto);
-
-                  }else if(sueldo > limiteAFPSALUD && sueldo < limiteCesantia){
-
-                    let parteArriba_entrerangos = liquido-descontar+(limiteAFPSALUD*salud)+(limiteAFPSALUD*afp)-(limiteAFPSALUD*factor*afp)-(limiteAFPSALUD*factor*salud);
-
-                    let parteAbajo_entrerangos= 1-cesantiaFactor - factor +( factor*cesantiaFactor);
-
-                    let sueldoEntreRangos = parteArriba_entrerangos / parteAbajo_entrerangos;
-
-                     this.armarSueldoDesdeImponible(sueldoEntreRangos, (limiteAFPSALUD*afp), (limiteAFPSALUD*salud), (cesantiaFactor*sueldoEntreRangos) ,factor, descontar, indice, afpSeleccionadaObjeto)
+                },                
+                analizarSiFun(descuentosIsapre_en_funcion, tributable){
+                  let limiteAFPSALUD = 2272728;
+                  let limiteCesantia = 3409091;
+                  if(limiteAFPSALUD * 0.07 < descuentosIsapre_en_funcion ){
+                    descuentosIsapre_en_funcion = limiteAFPSALUD * 0.07;
                   }
 
-                },  // Fin porFormula
-                armarSueldoDesdeImponible(imponible, montoAfp, montoIsapre, montoCesantia, factor, descontar, indice, afpSeleccionadaObjeto){
-                  console.log("EL IMPONIBLE ES.... ", imponible)
-                   if( (imponible/1.25) * 0.25 > 119146){
-                      this.datosTrabajador[indice].sueldoBase = imponible - 119146;
-                      this.datosTrabajador[indice].montoGratificacionLegal = 119146;
+
+                  if( this.fun > 0 ){
+
+                    let saludFun = parseFloat(this.Parametros.UF * this.fun);
+
+                    if(saludFun > descuentosIsapre_en_funcion){
+                      
+                      this.MontoSaludDefinitivo = saludFun;
+                      console.log("MontoSaludDefinitivo", this.MontoSaludDefinitivo)
+                      this.diferencia_salud = (Math.abs(saludFun - descuentosIsapre_en_funcion) * 1);
+                      
                     }else{
-                      this.datosTrabajador[indice].sueldoBase = imponible /1.25;
-                      this.datosTrabajador[indice].montoGratificacionLegal = imponible * 0.25;
+
+                      this.MontoSaludDefinitivo = descuentosIsapre_en_funcion;
+                      console.log("MontoSaludDefinitivo", this.MontoSaludDefinitivo)
+                      this.diferencia_salud = 0;
+                    }              
+
+                  }else{
+                    
+                      this.MontoSaludDefinitivo = descuentosIsapre_en_funcion;
+                  console.log("MontoSaludDefinitivo segundo else.", this.MontoSaludDefinitivo)
+                      this.diferencia_salud = 0;
+                  }
+                  console.log("thisdiferenciasalud" , this.diferencia_salud )
+                },
+                asignarCargas(Tramocargas,cargas){
+                  let montoPorCargas = 0;
+                  console.log("this.Tramocargas", Tramocargas)
+                  cargas= cargas*1;
+                  console.log("this.cargas", cargas)
+                  
+                  if(Tramocargas == 1){
+                    //console.log("this.Parametros.AsignFamA ", this.Parametros.AsignFamA )
+                    this.montoPorCargas = this.Parametros.AsigFamA * cargas;
+                  }else if(Tramocargas == 2){
+                    //console.log("this.Parametros.AsignFamA ", this.Parametros.AsignFamB )
+                    this.montoPorCargas = this.Parametros.AsigFamB * cargas;
+
+                  }else if(Tramocargas == 3){
+                    //console.log("this.Parametros.AsignFamA ", this.Parametros.AsignFamC )
+                    this.montoPorCargas = this.Parametros.AsigFamC * cargas;
+
+                  }else{
+                    this.montoPorCargas = 0;
+                  }
+                  console.log("montoPorCargas", this.montoPorCargas)
+                  return this.montoPorCargas;
+                },
+                desdeBaseDarLiquidoDefinito(imponible_preliminar, coef_afpsalud, coef_cesantia, LiqPactado, coef_universal, afp, salud, parametros,indice_trabajador, afpSeleccionadaObjeto){
+                  
+                  let primer_liquido_simulado_por_tabla_imp = parseInt((this.impuestos[0].desde - (( this.impuestos[0].desde * this.impuestos[0].factor ) -  this.impuestos[0].cantidadRebajar)));
+
+                  if(  primer_liquido_simulado_por_tabla_imp  > LiqPactado)   return this.porFormula((0.07) ,afp,coef_cesantia, 0, 0, LiqPactado, coef_afpsalud, parametros, coef_universal,indice_trabajador, afpSeleccionadaObjeto );
+
+                  
+
+
+                  this.impuestos.forEach(value => {
+              
+
+                    let segundo_liquido_simulado_por_tabla_imp_uno = parseInt((value.desde - (( value.desde * value.factor ) -  value.cantidadRebajar)));
+
+                    let segundo_liquido_simulado_por_tabla_imp_dos = parseInt((value.hasta - (( value.hasta * value.factor ) -  value.cantidadRebajar)));
+
+
+                    if(LiqPactado > segundo_liquido_simulado_por_tabla_imp_uno && LiqPactado < segundo_liquido_simulado_por_tabla_imp_dos){
+                      
+                      this.porFormula((0.07), (this.PrevisionSeleccionada/100),coef_cesantia, value.factor, value.cantidadRebajar, LiqPactado, coef_afpsalud, parametros, coef_universal,indice_trabajador, afpSeleccionadaObjeto);
 
                     }
 
-                  this.datosTrabajador[indice].objetoAfp = afpSeleccionadaObjeto;
-                  this.datosTrabajador[indice].imponible = imponible;
-                  this.datosTrabajador[indice].MontoAfp = montoAfp;
-                  this.datosTrabajador[indice].MontoIsapre = montoIsapre;
-                  this.datosTrabajador[indice].MontoCesantia = montoCesantia;
-                  this.datosTrabajador[indice].impuesto = ((imponible - (montoAfp + montoCesantia + montoIsapre)) * factor) - descontar
-                  this.datosTrabajador[indice].liquido = imponible+this.datosTrabajador[indice].colacion + this.datosTrabajador[indice].movilizacion - (montoAfp + montoCesantia + montoIsapre + this.datosTrabajador[indice].impuesto)                  
-                  console.log("sueldoCalculado", this.datosTrabajador)
+                  })
+              
+                }, // Fin desdebasedarliquidodefinito
+                porFormula(salud, afp, cesantiaFactor,factor, descontar, liquido, coefAFPISAPRE, Parametros, coef_universal, indice_trabajador, afpSeleccionadaObjeto){
+                 
+                  let limiteAFPSALUD = 2272728;
+                  let limiteCesantia = 3409091;
+                  liquido = liquido - this.totalNoImponible;
+                  console.log("this.fun", this.fun)
+                  if( this.fun > 0 ){
+                      
+                      let parteArriba = parseInt(liquido) + parseInt(this.MontoSaludDefinitivo)  - parseInt(descontar);
+                      let parteAbajo = 1  - afp - cesantiaFactor - factor + (factor*afp) + (factor*salud) + (factor * cesantiaFactor);
+                      let sueldo = parteArriba / parteAbajo;
+                 
+
+
+
+
+                  console.log("sueldo > limiteCesantia", sueldo > limiteCesantia)
+                  console.log("sueldo > ", sueldo  )
+                  console.log(" > limiteCesantia",   limiteCesantia)
+                      if(sueldo > limiteCesantia){
+                                // Listo..!!
+                                let tImponible_superior_lim_cesantia = (((parseInt(liquido)+ parseInt(this.MontoSaludDefinitivo)  - (factor*limiteAFPSALUD*afp) - (factor*limiteAFPSALUD*salud)-(factor*limiteCesantia*cesantiaFactor))-descontar + (limiteAFPSALUD*afp) +(limiteCesantia*cesantiaFactor))/     ( 1-factor))
+
+                                this.armarSueldoDesdeImponible(tImponible_superior_lim_cesantia, limiteAFPSALUD*afp, parseInt(limiteAFPSALUD*salud) , limiteCesantia*cesantiaFactor ,factor, descontar, indice_trabajador, afpSeleccionadaObjeto)
+                              
+                      }else if(sueldo < limiteAFPSALUD){
+                                  
+                                  //let descuentos = (sueldo*salud) + (afp*sueldo) + (cesantiaFactor*sueldo);
+                                  //let liquido_calculado_ = sueldo - descuentos - ( ( (sueldo-descuentos)*factor) - descontar  );
+                                  this.armarSueldoDesdeImponible(sueldo, (afp*sueldo), (sueldo*salud), (cesantiaFactor*sueldo) ,factor, descontar, indice_trabajador, afpSeleccionadaObjeto);
+
+                      }else if(sueldo > limiteAFPSALUD && sueldo < limiteCesantia){
+
+                                let parteArriba_entrerangos = liquido-descontar+ parseInt(this.MontoSaludDefinitivo) +(limiteAFPSALUD*afp)-(limiteAFPSALUD*factor*afp)-(limiteAFPSALUD*factor*salud);
+
+                                let parteAbajo_entrerangos= 1-cesantiaFactor - factor +( factor*cesantiaFactor);
+
+                                let sueldoEntreRangos = parteArriba_entrerangos / parteAbajo_entrerangos;
+
+                                this.armarSueldoDesdeImponible(sueldoEntreRangos, (limiteAFPSALUD*afp), (limiteAFPSALUD*salud), (cesantiaFactor*sueldoEntreRangos) ,factor, descontar, indice_trabajador, afpSeleccionadaObjeto)
+                      }
+
+
+                  }else{
+                      let parteArriba = liquido - descontar;
+                      console.log("En else, viendo q tiene el liquido", liquido)
+                      console.log("En else, viendo q tiene el descontar", descontar)
+                      let parteAbajo = 1 - salud - afp - cesantiaFactor - factor + (factor*afp) + (factor*salud) + (factor * cesantiaFactor);
+                      console.log("parte arriba", parteArriba)
+                      console.log("parte parteAbajo", parteAbajo)
+                      let sueldo = parteArriba / parteAbajo;
+                  console.log("sueldo > limiteCesantia", sueldo > limiteCesantia)
+                  console.log("sueldo > ", sueldo  )
+                  console.log(" > limiteCesantia",   limiteCesantia)
+                      if(sueldo > limiteCesantia){
+                                // Listo..!!
+                                let tImponible_superior_lim_cesantia = (((liquido - (factor*limiteAFPSALUD*afp) - (factor*limiteAFPSALUD*salud)-(factor*limiteCesantia*cesantiaFactor))-descontar + (limiteAFPSALUD*afp) + (limiteAFPSALUD*salud)+(limiteCesantia*cesantiaFactor))/     ( 1-factor))
+
+                                this.armarSueldoDesdeImponible(tImponible_superior_lim_cesantia, limiteAFPSALUD*afp, limiteAFPSALUD*salud, limiteCesantia*cesantiaFactor ,factor, descontar, indice_trabajador, afpSeleccionadaObjeto)
+                              
+                      }else if(sueldo < limiteAFPSALUD){
+                                  
+                                  let descuentos = (sueldo*salud) + (afp*sueldo) + (cesantiaFactor*sueldo);
+                                  let liquido_calculado_ = sueldo - descuentos - ( ( (sueldo-descuentos)*factor) - descontar  );
+                                  this.armarSueldoDesdeImponible(sueldo, (afp*sueldo), (sueldo*salud), (cesantiaFactor*sueldo) ,factor, descontar, indice_trabajador, afpSeleccionadaObjeto);
+
+                      }else if(sueldo > limiteAFPSALUD && sueldo < limiteCesantia){
+
+                                let parteArriba_entrerangos = liquido-descontar+(limiteAFPSALUD*salud)+(limiteAFPSALUD*afp)-(limiteAFPSALUD*factor*afp)-(limiteAFPSALUD*factor*salud);
+
+                                let parteAbajo_entrerangos= 1-cesantiaFactor - factor +( factor*cesantiaFactor);
+
+                                let sueldoEntreRangos = parteArriba_entrerangos / parteAbajo_entrerangos;
+
+                                this.armarSueldoDesdeImponible(sueldoEntreRangos, (limiteAFPSALUD*afp), (limiteAFPSALUD*salud), (cesantiaFactor*sueldoEntreRangos) ,factor, descontar, indice_trabajador, afpSeleccionadaObjeto)
+                      }
+
+
+                  }
+
+
+
+
+                  
+                  
+
+
+
+
+
+
+                },  // Fin porFormula
+               /* armarSueldoDesdeImponible(imponible, montoAfp, montoIsapre, montoCesantia, factor, descontar, indice, afpSeleccionadaObjeto, indice_trabajador){
+                   if( (imponible/1.25) * 0.25 > 119146){
+                      this.datosTrabajador[indice_trabajador].sueldoBase = imponible - 119146;
+                      this.datosTrabajador[indice_trabajador].montoGratificacionLegal = 119146;
+                    }else{
+                      this.datosTrabajador[indice_trabajador].sueldoBase = imponible /1.25;
+                      this.datosTrabajador[indice_trabajador].montoGratificacionLegal = imponible * 0.25;
+
+                    }
+                  this.datosTrabajador[indice_trabajador].objetoAfp = afpSeleccionadaObjeto;
+                  this.datosTrabajador[indice_trabajador].imponible = imponible;
+                  this.datosTrabajador[indice_trabajador].MontoAfp = montoAfp;
+                  this.datosTrabajador[indice_trabajador].MontoIsapre = montoIsapre;
+                  this.datosTrabajador[indice_trabajador].MontoCesantia = montoCesantia;
+                  this.datosTrabajador[indice_trabajador].impuesto = ((imponible - (montoAfp + montoCesantia + montoIsapre)) * factor) - descontar
+                  this.datosTrabajador[indice_trabajador].liquido = imponible+this.datosTrabajador[indice_trabajador].colacion + this.datosTrabajador[indice_trabajador].movilizacion - (montoAfp + montoCesantia + montoIsapre + this.datosTrabajador[indice_trabajador].impuesto)                  
+                },*/
+                armarSueldoDesdeImponible(imponible, montoAfp, montoIsapre, montoCesantia, factor, descontar,indice_trabajador ,afpSeleccionadaObjeto){
+                  //alert("Adfsasdfasdfasfd")
+                  this.asignarCargas(this.datosTrabajador[indice_trabajador].tramo, this.datosTrabajador[indice_trabajador].cargas);
+                  if( (imponible/1.25) * 0.25 > 119146){
+                      this.datosTrabajador[indice_trabajador].sueldoBase = imponible - 119146;
+                      this.datosTrabajador[indice_trabajador].montoGratificacionLegal = 119146;
+                  }else{
+                      this.datosTrabajador[indice_trabajador].sueldoBase = imponible /1.25;
+                      this.datosTrabajador[indice_trabajador].montoGratificacionLegal = imponible * 0.25;
+
+                  }
+                  if(this.fun > 0){
+                    this.datosTrabajador[indice_trabajador].adicionalIsapre = Math.abs(this.Parametros.UF * this.fun -  montoIsapre)
+                  }else{
+                    this.datosTrabajador[indice_trabajador].adicionalIsapre = 0;
+                  }
+                  console.log(afpSeleccionadaObjeto)
+                  this.datosTrabajador[indice_trabajador].objetoAfp = afpSeleccionadaObjeto;
+                  this.datosTrabajador[indice_trabajador].noImponible = parseInt((this.montoPorCargas) + (this.totalNoImponible));
+                  this.datosTrabajador[indice_trabajador].imponible = imponible;
+                  this.datosTrabajador[indice_trabajador].MontoAfp = montoAfp;
+                  this.datosTrabajador[indice_trabajador].MontoIsapre = parseInt(this.MontoSaludDefinitivo);
+                  this.datosTrabajador[indice_trabajador].MontoCesantia = montoCesantia;
+                  this.datosTrabajador[indice_trabajador].MontoPorCargas = this.montoPorCargas;
+                  this.datosTrabajador[indice_trabajador].impuesto = ((imponible - (montoAfp + montoCesantia + montoIsapre)) * factor) - descontar
+                 
+
+
+                  this.datosTrabajador[indice_trabajador].liquido = parseInt( parseInt(imponible) + parseInt(this.datosTrabajador[indice_trabajador].noImponible) ) - (parseInt(montoAfp) + parseInt(montoCesantia) + parseInt(this.MontoSaludDefinitivo) + parseInt(this.datosTrabajador[indice_trabajador].impuesto))      
+
+                  console.log("El (this.montoPorCargas)n1", (this.montoPorCargas) )            
+                  console.log("el factor usado es.. .", factor)
+                  console.log("El descontadoes ", descontar)
+
+                  console.log("E (this.totalNoImponible)", (this.totalNoImponible)  )            
+           
+
+                  console.log(this.datosTrabajador[indice_trabajador]);
+                  console.log("parseInt(this.datosTrabajador[indice_trabajador].impuesto)", parseInt(this.datosTrabajador[indice_trabajador].impuesto))
+
                 }
                 
         }
