@@ -19,7 +19,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 
 Route::post('/ImpuestosDelMes', 'ImpuestosController@impuestosDelMesEnCurso');
-
+Route::post('/ParametrosPorMes', 'parametrosController@parametrosDelMesEnCurso');
 Route::post('/AfpPorMes', 'afpController@getAfpPorMes');
 
 

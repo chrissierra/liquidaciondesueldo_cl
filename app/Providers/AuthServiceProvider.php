@@ -25,6 +25,14 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
+      /*  Auth::extend('admin', function ($app, $name, array $config) {
+            // Return an instance of Illuminate\Contracts\Auth\Guard...
+
+            return new admin(Auth::createUserProvider($config['provider']));
+        });  */
+
+        
+
         //
     }
 }

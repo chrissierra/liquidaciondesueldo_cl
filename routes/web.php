@@ -11,10 +11,10 @@
 |
 */
 use Barryvdh\DomPDF\Facade as PDF;
-
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
-
-Route::get('/', function () {
+use Illuminate\Database\Eloquent\Builder;
+Route::get('/', function (Request $request) {
 	//parametros_desde_bbdd
 
 	$mes = date("n");
@@ -26,9 +26,12 @@ Route::get('/', function () {
     SEO::opengraph()->addProperty('type', 'articles');
     SEO::twitter()->setSite('@Liquidaciondesueldo');
 
+    
+
+
     return view('liquidoabase')
     ->with("parametros_desde_bbdd", App\table_parametro::All())
-	    ->with("afps", App\afp::where('mes', $mes)
+	->with("afps", App\afp::where('mes', $mes)
 	    ->select('Provida', 'Capital', 'Cuprum', 'PlanVital', 'Uno', 'IPS', 'Modelo', 'Habitat')
 	    ->first()->toJson()
 	);
@@ -94,20 +97,25 @@ Route::get('/Importando', function () {
 
 })->middleware('auth');
 
+
 Route::post('/MasivoCsvImportacion', 'masivosCsv@importandoCsv')->name("importacion.csv");
 
-
-Route::get('/Descargar_liquidacion', function (Request $request) {
-    
-    //$objeto_liquidaciones = $request->input('objeto_liquidaciones');
-    
+Route::post('/ProcesarLiquidacionPdf', 'LiquidacionPdfController@procesarPdf');
+Route::get('/Descargar_liquidacion/{id}', function ($id) {
+       
     // Consultar base de datos, según el id de liquidacion . Usar esos datos para generar liquidacion.
 
-    $pdf = PDF::loadView('liquidacion_en_pdf', compact('objeto_liquidaciones'));
+    $modelo =  \App\LiquidacionesRealizadas::with('trabajador.empresa')->where('id', $id)->first();
 
-    return $pdf->download('listado.pdf');
-    //$request->input('objeto_liquidacion');
-    //return view('importar');
+    //dd($modelo);
+
+    //return view('liquidacion_en_pdf', compact('modelo'));
+
+    $pdf = PDF::loadView('liquidacion_en_pdf', compact('modelo'));
+
+    return $pdf->download('listado.pdf'); // SÍ USAR
+    
+
 });
 
 Auth::routes();
@@ -120,4 +128,24 @@ Route::get('/IngresoImpuestos', function (Request $request) {
 
 })->name('IngresoImpuestos');
 
+
+Route::get('/IngresoAfp', function (Request $request) {
+    
+    return view('afp.ingresoAfps');
+
+})->name('IngresoAfp');
+
+Route::get('/IngresoParametros', function (Request $request) {
+    
+    return view('parametros_adicionales.ingresoParametros');
+
+})->name('IngresoParametros');
+
 Route::post('/IngresandoImpuestos', 'ImpuestosController@ingresarImpuestos')->name('IngresandoImpuestos');
+Route::post('/IngresandoAfp', 'afpController@ingresarAfps')->name('IngresandoAfp');
+Route::post('/IngresandoParametros', 'parametrosController@ingresarParametros')->name('IngresandoParametros');
+Route::post('/GuardarDatosInvitadoLiquidacion', 'LiquidacionPdfController@GuardarDatosInvitadoLiquidacion')->name('GuardarDatosInvitadoLiquidacion');
+
+
+Route::post('/GetTrabajadoresPorIdUsuario', 'EmpresaController@GetTrabajadoresPorIdUsuario');
+

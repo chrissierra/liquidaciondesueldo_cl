@@ -22,6 +22,42 @@
     <div class="row ">
         <div class="col-12 col-md-6 columna-derecha">
           <form>
+
+
+
+                      <div class="form-group">
+                        <label for="exampleFormControlSelect1">Selecciona Mes</label>
+                        <select  @change="EleccionMes()"    v-model="mes" class="form-control" id="exampleFormControlSelect1">
+                          <option>1</option>
+                          <option>2</option>
+                          <option>3</option>
+                          <option>4</option>
+                          <option>5</option>
+                          <option>6</option>
+                          <option>7</option>
+                          <option>8</option>
+                          <option>9</option>
+                          <option>10</option>
+                          <option>11</option>
+                          <option>12</option>
+                        </select>
+                      </div>
+
+
+                    <div class="form-group">
+                        <label for="Anio">Selecciona Año</label>
+                        <select  @change="EleccionAnio()"  v-model="anio" class="form-control" id="Anio">
+                          <option>2019</option>
+                          <option>2020</option>
+                          <option>2021</option>
+                          <option>2022</option>
+                          <option>2023</option>
+                          <option>2024</option>
+                          <option>2025</option>
+                        </select>
+                      </div>
+
+
               <div class="form-group">
                 <label for="SueldooLiqPactado">Sueldo Base</label>
                 <input v-model="sueldoBase" type="number" class="form-control" aria-describedby="sueldoAyuda">
@@ -69,7 +105,7 @@
                 <label for="AFP_Input">AFP</label>
                 <select  @change="eleccionPrevision()"  class="form-control" id="AFP_Input"  v-model="PrevisionSeleccionada">
                 
-                  <option v-for="item in AFPS" :value="item.comision">{{ item.nombre_afp }} - Comision {{item.comision}} </option>
+                  <option v-for="item in AFPS" :value="[item.comision, item.nombre_afp]">{{ item.nombre_afp }} - Comision {{item.comision}} </option>
 
                 </select>
               </div>   
@@ -109,6 +145,10 @@
               <div class="ultimo-form-group" style="text-align: center; margin-bottom: 3em;"> 
                 <button style="background-color: #dd6b4d; border: solid 0; min-width: 10em;" v-on:click="clikeando" class="btn btn-primary">Calcular sueldo líquido</button>
               </div>
+
+          <div  v-if="!booleanoHayDatos"  class="alert alert-danger" role="alert">
+            Para el mes {{mes}} en el año {{anio}} no hay datos disponibles. Intenta otra fecha.
+          </div>
             </form>  
         </div>
         
@@ -126,13 +166,16 @@
 
 <script>
     export default {
-      props:['parametros', 'afp'],
+      props:['parametros', 'afp', 'usuario'],
         mounted() {
-          console.log(this.Parametros);
+          // Replicar acá: 
+          this.actualizar_fecha()
+          console.log(this.usuario);
           console.log(new Date().getFullYear())
         },
         data(){
             return{
+                booleanoHayDatos: true,
                 TipoContrato: 2,
                 totalNoImponible:0,
                 sueldoLiquidoPactado: 0,
@@ -143,7 +186,7 @@
                 Tramocargas: 0,
                 gratificacionLegal: 1,
                 SaludSeleccionada:'Fonasa',
-                PrevisionSeleccionada:0,
+                PrevisionSeleccionada:[],
                 fun: 0,
                 Parametros: JSON.parse(this.parametros)[0],
                 AFPS: this.json2array(JSON.parse(this.afp)),
@@ -152,7 +195,10 @@
                 impuestos: [],
                 sueldoCalculado:{},
                 liquidacion_terminada: false,
-                bonos:0
+                bonos:0,
+                mes: new Date().getMonth()+1,
+                anio: new Date().getFullYear(),
+                montoPorCargas:0 
             }
         },  
         methods: {
@@ -160,17 +206,53 @@
                 clikeando(e){
                     
                     e.preventDefault()
-                    console.log(new Date().getMonth())
+                    console.log(new Date().getMonth());
+
                     axios
-                    .post('api/ImpuestosDelMes', {mes: (new Date().getMonth()+1), anio: new Date().getFullYear() })
+                    .post('api/ImpuestosDelMes', {mes: this.mes, anio: this.anio }, { crossdomain: true })
                     .then(response => {
 
                         this.impuestos = response.data;
                         this.porFormula();
+                        this.booleanoHayDatos = true;
 
-                    });
+                    })
+                    .catch( (e) => {
+                      
+                      console.log("Otro Error", e);
+                      
+                      this.booleanoHayDatos = false;
+
+                    } );                    
 
                 },
+                actualizar_fecha(){
+
+                            axios
+                            .post('api/ParametrosPorMes', {mes: this.mes, anio: this.anio})
+                            .then( response => {
+                                this.Parametros = response.data[0];
+                                this.booleanoHayDatos = true;
+                            })
+                            .catch( (err) => {
+                              this.booleanoHayDatos = false;
+                              console.log("Hubo un error", err);
+                            } );
+
+                            
+                            axios
+                            .post('api/AfpPorMes', {mes: this.mes, anio: this.anio})
+                            .then( response => {
+                                console.log(response.data)
+                                this.AFPS = this.json2array(response.data);
+                                this.booleanoHayDatos = true;
+                            })
+                            .catch( (err) => {
+
+                              this.booleanoHayDatos = false;
+                              console.log("Hubo un error", err);
+                            } );
+                },                
                 asignarCargas(){
                   let montoPorCargas = 0;
                   console.log("this.Tramocargas", this.Tramocargas)
@@ -191,7 +273,8 @@
                   }else{
                     montoPorCargas = 0;
                   }
-                  console.log("montoPorCargas", montoPorCargas)
+                  console.log("montoPorCargas", montoPorCargas);
+                  this.montoPorCargas = montoPorCargas;
                   return montoPorCargas;
                 },
                 eleccionSalud(e){
@@ -200,6 +283,12 @@
                 eleccionPrevision(){
 
                 },
+                EleccionMes(){
+                  this.actualizar_fecha();
+                },
+                EleccionAnio(){
+                  this.actualizar_fecha();
+                },                
                 json2array(json){
                       var result = [];
                       Object.entries(json).forEach(([key, value]) => {                            
@@ -235,11 +324,11 @@
 
                   let Coefcesantia = this.TipoContrato === 2 ? 0 : 0.006;
                         
-                  var coficienteUniversal = 1 - ((this.PrevisionSeleccionada/100) + 0.07 + Coefcesantia)
+                  var coficienteUniversal = 1 - ((this.PrevisionSeleccionada[0]/100) + 0.07 + Coefcesantia)
                         
-                  let coficienteAFPISAPRE = 1 - ((this.PrevisionSeleccionada/100) + 0.07 )
+                  let coficienteAFPISAPRE = 1 - ((this.PrevisionSeleccionada[0]/100) + 0.07 )
 
-                  let coficienteAFP = this.PrevisionSeleccionada/100;
+                  let coficienteAFP = this.PrevisionSeleccionada[0]/100;
 
                   let limiteAFPSALUD = 2242147;
                   
@@ -260,6 +349,8 @@
                   let tributable = imponible - (montoCesantia + montoAfp + montoIsapre);
                   this.liquidacion_terminada = true;
                   console.log("tributable", tributable)
+
+                  console.log(this.impuestos)
 
                   if(this.impuestos[0].desde > tributable) return this.armarSueldoDesdeImponible(imponible, montoAfp, montoIsapre, montoCesantia, 0, 0);
 
@@ -295,6 +386,9 @@
                   }else{
                     this.sueldoCalculado.adicionalIsapre = 0;
                   }
+                  this.sueldoCalculado.salud_nombre = this.SaludSeleccionada;
+                  this.sueldoCalculado.cargas = this.cargas;
+                  this.sueldoCalculado.nombre_afp = this.PrevisionSeleccionada[1];                  
                   this.sueldoCalculado.noImponible = (this.asignarCargas()*1) + (this.totalNoImponible * 1);
                   this.sueldoCalculado.imponible = imponible;
                   this.sueldoCalculado.MontoPorCargas = this.asignarCargas();
@@ -302,17 +396,38 @@
                   this.sueldoCalculado.MontoIsapre = montoIsapre;
                   this.sueldoCalculado.MontoCesantia = montoCesantia;
                   this.sueldoCalculado.impuesto = ((imponible - (montoAfp + montoCesantia + montoIsapre)) * factor) - descontar
-                  this.sueldoCalculado.liquido = (imponible + this.sueldoCalculado.noImponible) - (montoAfp + montoCesantia + montoIsapre + this.sueldoCalculado.impuesto +this.sueldoCalculado.adicionalIsapre )                  
-                  console.log("sueldoCalculado", this.sueldoCalculado);
+                  this.sueldoCalculado.liquido = (imponible + this.sueldoCalculado.noImponible) - (montoAfp + montoCesantia + montoIsapre + this.sueldoCalculado.impuesto +this.sueldoCalculado.adicionalIsapre );                  
                   
-                  //setTimeout(( )=> {
-                  this.$refs.metodoDentroDelComponente.verValor();
-                  //}, 500  )
-                    axios
-                    .post('/Descargar_liquidacion', { objeto_liquidaciones: this.sueldoCalculado })
+                  this.sueldoCalculado.montoTributable=(imponible - (montoAfp + montoCesantia + montoIsapre));
+                  this.sueldoCalculado.totalHaberes = imponible + this.sueldoCalculado.noImponible;
+                  this.sueldoCalculado.totalDescuentos = (montoAfp + montoCesantia + montoIsapre+this.sueldoCalculado.impuesto+this.sueldoCalculado.adicionalIsapre)
+
+                  this.sueldoCalculado.colacion = this.colacion
+                  this.sueldoCalculado.movilizacion = this.movilizacion
+                  this.sueldoCalculado.bonos = this.bonos;
+                  //this.usuario = (this.usuario == 'invitado') ? 'invitado' : JSON.parse(this.usuario);
+                  let usuario = (this.usuario == 'invitado') ? 'invitado' : JSON.parse(this.usuario);
+                  let user_id_ = (this.usuario == 'invitado') ? null : this.usuario.id;
+                  let invitado_ = (this.usuario == 'invitado') ? true : false;
+                  this.sueldoCalculado.usuario = usuario;
+
+
+                  axios
+                    .post('/ProcesarLiquidacionPdf', { 
+                      objeto_liquidaciones: JSON.stringify(this.sueldoCalculado),
+                      mes: this.mes,
+                      anio: this.anio,
+                      user_id: 1,
+                      invitado: true
+                    })
                     .then(response => {
 
-                      console.log("espuesta", response)
+                      this.sueldoCalculado._idPdf = response.data.id;
+
+                      setTimeout(( )=> {
+                          this.$refs.metodoDentroDelComponente.verValor();
+                      }, 500  );
+      
 
                     });
 

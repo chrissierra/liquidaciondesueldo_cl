@@ -15,8 +15,18 @@ class ImpuestosController extends Controller
     	$respuesta = \App\Impuesto::where('mes', $request->input('mes'))
     	->where('anio', $request->input('anio'))
     	->get();
+        
+        $cantidad = \App\Impuesto::where('mes', $request->input('mes'))
+        ->where('anio', $request->input('anio'))->count();
 
-    	return $respuesta->toJson();
+        if($cantidad > 0){
+            
+            return response($respuesta->toJson(), 200);
+        }else{
+            return response('Error', 404);
+        }
+    	
+
     }
 
 
@@ -30,16 +40,30 @@ class ImpuestosController extends Controller
     	$anio = $request->input('anio');
     	$factor = $request->input('factor');
     	$cantidadRebajar = $request->input('cantidadRebajar');
+    	$tramo = $request->input('tramo');
 
-    	$impuestos->desde = $desde;
+
+    	$impuestos::updateOrCreate(
+		    ['mes' => $request->input('mes'), 'anio' => $request->input('anio'), 'tramo' => $request->input('tramo')],
+		    ['desde' => $desde, 'hasta' => $hasta, 'mes' => $mes, 'anio' => $anio, 'factor' => $factor, 'cantidadRebajar' => $cantidadRebajar,'tramo' => $tramo ]
+		);
+
+    	/*$impuestos->desde = $desde;
     	$impuestos->hasta = $hasta;
     	$impuestos->mes = $mes;
     	$impuestos->anio = $anio;
     	$impuestos->factor = $factor;
     	$impuestos->cantidadRebajar = $cantidadRebajar;
-    	$impuestos->save();
+    	$impuestos->save(); */
 
     	return view('impuestos.ingresoRealizadoImpuesto', compact('impuestos'));
 
     }
+
+
+
+
+
+
+
 }

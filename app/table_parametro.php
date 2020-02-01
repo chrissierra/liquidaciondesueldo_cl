@@ -12,20 +12,5 @@ class table_parametro extends Model
      *
      * @var array
      */
-    protected $fillable = [
-        'Modelo',
-		'Habitat',
-		'Provida',
-		'Cuprum',
-		'PlanVital',
-		'Uno',
-		'UF',
-		'Cesantia',
-		'AsigFamA',
-		'AsigFamB',
-		'AsigFamC',
-		'TopeImpAFP',
-		'TopeImpIPS',
-		'TopeImpSegCesantia'
-    ];
+ protected $guarded = [];
 }

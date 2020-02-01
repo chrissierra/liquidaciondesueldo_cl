@@ -22,6 +22,40 @@
     <div class="row ">
         <div class="col-12 col-md-6 columna-derecha">
           <form>
+
+                      <div class="form-group">
+                        <label for="exampleFormControlSelect1">Selecciona Mes</label>
+                        <select  @change="EleccionMes()"  v-model="mes" class="form-control" id="exampleFormControlSelect1">
+                          <option>1</option>
+                          <option>2</option>
+                          <option>3</option>
+                          <option>4</option>
+                          <option>5</option>
+                          <option>6</option>
+                          <option>7</option>
+                          <option>8</option>
+                          <option>9</option>
+                          <option>10</option>
+                          <option>11</option>
+                          <option>12</option>
+                        </select>
+                      </div>
+
+
+                    <div class="form-group">
+                        <label for="Anio">Selecciona Año</label>
+                        <select   @change="EleccionAnio()"  v-model="anio" class="form-control" id="Anio">
+                          <option>2019</option>
+                          <option>2020</option>
+                          <option>2021</option>
+                          <option>2022</option>
+                          <option>2023</option>
+                          <option>2024</option>
+                          <option>2025</option>
+                        </select>
+                      </div>
+
+
               <div class="form-group">
                 <label for="SueldooLiqPactado">Sueldo Liquido</label>
                 <input v-model="sueldoLiquidoPactado" type="number" class="form-control" aria-describedby="sueldoAyuda">
@@ -54,9 +88,9 @@
 
               <div class="form-group">
                 <label for="AFP_Input">AFP</label>
-                <select    class="form-control" id="AFP_Input"  v-model="PrevisionSeleccionada">
+                <select class="form-control" id="AFP_Input"  v-model="PrevisionSeleccionada">
                 
-                  <option v-for="item in AFPS" :value="item.comision">{{ item.nombre_afp }} - Comision {{item.comision}}</option>
+                  <option v-for="item in AFPS" :value="[item.comision, item.nombre_afp]">{{ item.nombre_afp }} - Comision {{item.comision}}</option>
 
                 </select>
               </div>   
@@ -97,6 +131,12 @@
                 <button style="background-color: #dd6b4d; border: solid 0; width: 10em;" v-on:click="clikeando" class="btn btn-primary">Calcular</button>
               </div>
             </form>  
+
+          <div  v-if="!booleanoHayDatos"  class="alert alert-danger" role="alert">
+            Para el mes {{mes}} en el año {{anio}} no hay datos disponibles. Intenta otra fecha.
+          </div>
+
+
         </div>
         
 
@@ -113,11 +153,16 @@
 
 <script>
     export default {
-      props:['parametros', 'afp'],
-        mounted() {
+      props:['parametros', 'afp', 'usuario'],
+        mounted() {                  
+          this.actualizar_fecha();
+          console.log(this.usuario);
+          
+          console.log("Resultado para this.usuario", this.usuario)
         },
         data(){
             return{
+                booleanoHayDatos: true,
                 TipoContrato: 2,
                 totalNoImponible:0,
                 sueldoLiquidoPactado: 0,
@@ -125,16 +170,18 @@
                 Tramocargas: 0,
                 gratificacionLegal: 1,
                 SaludSeleccionada:'Fonasa',
-                PrevisionSeleccionada:0,
+                PrevisionSeleccionada:[],
                 fun: 0,
-                Parametros: JSON.parse(this.parametros)[0],
-                AFPS: this.json2array(JSON.parse(this.afp)),
+                Parametros: '',
+                AFPS: '',
                 sueldoBase:0,
                 montoGratificacionLegal:0,
                 impuestos: [],
                 sueldoCalculado:{},
                 liquidacion_terminada: false,
-                montoPorCargas: 0
+                montoPorCargas: 0,
+                mes: new Date().getMonth()+1,
+                anio: new Date().getFullYear()                 
             }
         },  
         methods: {
@@ -142,18 +189,19 @@
                 clikeando(e){
                     
                     e.preventDefault();
-
+                    let respaldo_mes = this.mes;
+                    let respaldo_anio = this.anio;
                     axios
-                    .post('api/ImpuestosDelMes', {mes:1, anio:2020}, { crossdomain: true })
+                    .post('api/ImpuestosDelMes', {mes:this.mes, anio:this.anio}, { crossdomain: true })
                     .then(response => {
 
                         let cesantia = this.TipoContrato === 2 ? 0 : 0.006;
                         
-                        var coficienteUniversal = 1 - ((this.PrevisionSeleccionada/100) + 0.07 )
+                        var coficienteUniversal = 1 - ((this.PrevisionSeleccionada[0]/100) + 0.07 )
                         
-                        let coficienteAFPISAPRE = 1 - ((this.PrevisionSeleccionada/100) + 0.07 )
+                        let coficienteAFPISAPRE = 1 - ((this.PrevisionSeleccionada[0]/100) + 0.07 )
 
-                        let coef_afp = 1 - ((this.PrevisionSeleccionada/100) )
+                        let coef_afp = 1 - ((this.PrevisionSeleccionada[0]/100) )
                         
                         let coef_isapre = 1 - ( 0.07 )
                         
@@ -175,10 +223,25 @@
 
                         this.impuestos = response.data;
 
-                        this.desdeBaseDarLiquidoDefinito((totalImponible - this.totalNoImponible), coficienteAFPISAPRE, cesantia, this.sueldoLiquidoPactado, coficienteAFPISAPRE+cesantia, (this.PrevisionSeleccionada/100), 0.07, this.Parametros);
+                        this.desdeBaseDarLiquidoDefinito((totalImponible - this.totalNoImponible), coficienteAFPISAPRE, cesantia, this.sueldoLiquidoPactado, coficienteAFPISAPRE+cesantia, (this.PrevisionSeleccionada[0]/100), 0.07, this.Parametros);
 
-                    });
+                        this.booleanoHayDatos = true;
 
+                    })
+                    .catch( (e) => {
+                      
+                      console.log("Otro Error", e);
+
+                      this.booleanoHayDatos = false;
+
+                    } )
+
+                },
+                EleccionMes(){
+                  this.actualizar_fecha();
+                },
+                EleccionAnio(){
+                  this.actualizar_fecha();
                 },
                 analizarSiFun(descuentosIsapre_en_funcion){
                   let limiteAFPSALUD = 2272728;
@@ -209,6 +272,39 @@
                   
                       this.diferencia_salud = 0;
                   }
+                },
+                actualizar_fecha(){
+
+                            let mes = this.mes;
+                            let anio = this.anio;
+                            axios
+                            .post('api/ParametrosPorMes', {mes: this.mes, anio: this.anio})
+                            .then( response => {
+
+
+                                this.Parametros = response.data[0];
+                                this.booleanoHayDatos = true;
+                            })
+                            .catch( (err) => {
+
+                              this.booleanoHayDatos = false;
+                              console.log("Hubo un error", err);
+                            } );
+
+
+                            
+                            axios
+                            .post('api/AfpPorMes', {mes: this.mes, anio: this.anio})
+                            .then( response => {
+                                console.log(response.data)
+                                this.AFPS = this.json2array(response.data);
+                                this.booleanoHayDatos = true;
+                            })
+                            .catch( (err) => {
+
+                              this.booleanoHayDatos = false;
+                              console.log("Hubo un error", err);
+                            } );
                 },
                 json2array(json){
                       var result = [];
@@ -264,7 +360,7 @@
 
                     if(LiqPactado > segundo_liquido_simulado_por_tabla_imp_uno && LiqPactado < segundo_liquido_simulado_por_tabla_imp_dos){
                       
-                      this.porFormula((0.07), (this.PrevisionSeleccionada/100),coef_cesantia, value.factor, value.cantidadRebajar, LiqPactado, coef_afpsalud, parametros, coef_universal);
+                      this.porFormula((0.07), (this.PrevisionSeleccionada[0]/100),coef_cesantia, value.factor, value.cantidadRebajar, LiqPactado, coef_afpsalud, parametros, coef_universal);
 
                     }
 
@@ -354,14 +450,12 @@
                 },  // Fin porFormula
                 armarSueldoDesdeImponible(imponible, montoAfp, montoIsapre, montoCesantia, factor, descontar){
                   this.asignarCargas();
-
                   if( (imponible/1.25) * 0.25 > 119146){
                       this.sueldoCalculado.sueldoBase = imponible - 119146;
                       this.sueldoCalculado.montoGratificacionLegal = 119146;
                   }else{
                       this.sueldoCalculado.sueldoBase = imponible /1.25;
                       this.sueldoCalculado.montoGratificacionLegal = imponible * 0.25;
-
                   }
 
                   if(this.fun > 0){
@@ -369,22 +463,50 @@
                   }else{
                     this.sueldoCalculado.adicionalIsapre = 0;
                   }
-                  
+                  this.sueldoCalculado.salud_nombre = this.SaludSeleccionada;
+                  this.sueldoCalculado.cargas = this.cargas;
+                  this.sueldoCalculado.nombre_afp = this.PrevisionSeleccionada[1];
                   this.sueldoCalculado.noImponible = (this.montoPorCargas*1) + (this.totalNoImponible * 1);
                   this.sueldoCalculado.imponible = imponible;
                   this.sueldoCalculado.MontoAfp = montoAfp;
                   this.sueldoCalculado.MontoIsapre = parseInt(this.MontoSaludDefinitivo);
                   this.sueldoCalculado.MontoCesantia = montoCesantia;
                   this.sueldoCalculado.MontoPorCargas = this.montoPorCargas;
-                  console.log("this.asignarCargas();", this.montoPorCargas)
-                  console.log("FACTOR EN armar sueldo ", factor)
                   this.sueldoCalculado.impuesto = ((imponible - (montoAfp + montoCesantia + montoIsapre)) * factor) - descontar
                   this.sueldoCalculado.liquido = ( parseInt(imponible) + parseInt(this.sueldoCalculado.noImponible) ) - (montoAfp + montoCesantia + parseInt(this.MontoSaludDefinitivo) + this.sueldoCalculado.impuesto)                  
-                  console.log("sueldoCalculado", this.sueldoCalculado);
+                 
+                   this.sueldoCalculado.montoTributable=(imponible - (montoAfp + montoCesantia + montoIsapre));
+                   this.sueldoCalculado.totalHaberes = imponible + this.sueldoCalculado.noImponible;
+                   this.sueldoCalculado.totalDescuentos = (montoAfp + montoCesantia + montoIsapre+this.sueldoCalculado.impuesto+this.sueldoCalculado.adicionalIsapre)
                   this.liquidacion_terminada = true;
-                  setTimeout(( )=> {
-                    this.$refs.metodoDentroDelComponente.verValor();
-                  }, 500  )
+                  //this.usuario = (this.usuario == 'invitado') ? 'invitado' : JSON.parse(this.usuario);
+                  let usuario = (this.usuario == 'invitado') ? 'invitado' : JSON.parse(this.usuario);
+                 
+                  let user_id_ = (this.usuario == 'invitado') ? null : this.usuario.id;
+                  let invitado_ = (this.usuario == 'invitado') ? true : false;
+                  this.sueldoCalculado.usuario = usuario;
+                  axios
+                    .post('/ProcesarLiquidacionPdf', { 
+                      objeto_liquidaciones: JSON.stringify(this.sueldoCalculado),
+                      mes: this.mes,
+                      anio: this.anio,
+                      user_id: user_id_,
+                      invitado: invitado_
+                    })
+                    .then(response => {
+                      this.sueldoCalculado._idPdf = response.data.id;
+                          setTimeout(( )=> {
+                              this.$refs.metodoDentroDelComponente.verValor();
+                          }, 500  );
+      
+                    });
+
+
+
+
+                 // setTimeout(( )=> {
+                 //   this.$refs.metodoDentroDelComponente.verValor();
+                 // }, 500  )
 
                 }
         }

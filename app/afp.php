@@ -8,4 +8,5 @@ class afp extends Model
 {
     //
      protected	$table = "afp";
+      protected $guarded = [];
 }

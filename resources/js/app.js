@@ -28,6 +28,11 @@ Vue.component('base-a-liquido', require('./components/baseAliquidoComponent.vue'
 
 Vue.component('liquidacion-pdf', require('./components/liquidacion_vista_pdf.vue').default);
 
+Vue.component('get-impuestos', require('./components/impuestos/getImpuestosComponent.vue').default);
+Vue.component('get-afp', require('./components/afps/getAfpsComponent.vue').default);
+Vue.component('get-parametros', require('./components/parametros/getParametrosComponent.vue').default);
+
+
 Vue.filter('aproximar', function (monto, limite) {
     return new Intl.NumberFormat().format(monto.toFixed(limite));
 });

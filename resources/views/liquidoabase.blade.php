@@ -31,9 +31,19 @@
         @component('componentes.navbar')              
         @endcomponent
 
+
+        @guest
         <div id="app">
-           <liquidoa-base afp="{{ $afps }}" parametros="{{ $parametros_desde_bbdd }}"></liquidoa-base>  
+           <liquidoa-base afp="{{ $afps }}" parametros="{{ $parametros_desde_bbdd }}"  usuario="invitado"></liquidoa-base>  
         </div>
+        @else
+        <div id="app">
+           <liquidoa-base afp="{{ $afps }}" parametros="{{ $parametros_desde_bbdd }}"  usuario="{{ auth()->user() }}"></liquidoa-base>  
+        </div>
+
+        @endguest
+
+
 
 
     </body>

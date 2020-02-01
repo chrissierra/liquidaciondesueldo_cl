@@ -1,3 +1,5 @@
+
+
 @extends('layouts.app')
 
 @section('content')
@@ -58,6 +60,8 @@
 
                             <div class="col-md-6">
                                 <input id="password-confirm" type="password" class="form-control" name="password_confirmation" required autocomplete="new-password">
+
+                                <input type="hidden" class="form-control" name="rol" required value="usuario">
                             </div>
                         </div>
 

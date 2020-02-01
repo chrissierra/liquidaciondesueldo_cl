@@ -28,9 +28,21 @@
         @component('componentes.navbar')              
         @endcomponent
 
+
+
+
+
+                @guest
+
         <div id="app">
-           <base-a-liquido afp="{{ $afps }}" parametros="{{ $parametros_desde_bbdd }}"></base-a-liquido>  
+           <base-a-liquido afp="{{ $afps }}" parametros="{{ $parametros_desde_bbdd }}" usuario="invitado"></base-a-liquido>  
         </div>
+        @else
+        <div id="app">
+           <base-a-liquido afp="{{ $afps }}" parametros="{{ $parametros_desde_bbdd }}" usuario="{{ auth()->user() }}"></base-a-liquido>  
+        </div>
+
+        @endguest
 
 
     </body>
