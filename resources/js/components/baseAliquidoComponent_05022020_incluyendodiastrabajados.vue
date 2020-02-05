@@ -71,12 +71,6 @@
                 <small id="diasTrabajados" class="form-text text-muted">Días trabajados sobre la base de 30</small>
               </div>
 
-              <div class="form-group">
-                <label for="horasExtras">Horas Extras</label>
-                <input  v-model="horasExtras" type="number" class="form-control" aria-describedby="horasExtras">
-                <small id="horasExtras" class="form-text text-muted">Ingresa N° de horas extras al 50%</small>
-              </div>              
-
                <div class="form-group">
                 <label for="movilizacion">Movilización</label>
                 <input v-model="movilizacion" type="number" class="form-control" aria-describedby="movilizacion">
@@ -94,14 +88,7 @@
                 <label for="bonos">Bonos</label>
                 <input v-model="bonos" type="number" class="form-control" aria-describedby="bonos">
                 <small id="bonos" class="form-text text-muted">Cantidad a pagar en bonos imponibles.</small>
-              </div>      
-
-
-               <div class="form-group">
-                <label for="anticipo">Anticipo</label>
-                <input v-model="anticipo" type="number" class="form-control" aria-describedby="anticipo">
-                <small id="anticipo" class="form-text text-muted">Anticipo.</small>
-              </div>                        
+              </div>               
   
 
               <div class="form-group">
@@ -219,9 +206,7 @@
                 mes: new Date().getMonth()+1,
                 anio: new Date().getFullYear(),
                 montoPorCargas:0,
-                diasTrabajados:30,
-                horasExtras: 0,
-                anticipo:0 
+                diasTrabajados:30 
             }
         },  
         methods: {
@@ -230,11 +215,7 @@
                     
                     e.preventDefault()
                     console.log(new Date().getMonth());
-                    
                     if(this.diasTrabajados < 0 || this.diasTrabajados > 30) return this.mensajeErrorFuncion('Los días trabajados deben estar entre 0 y 30');
-
-
-                    if(this.horasExtras < 0 ) return this.mensajeErrorFuncion('Las horas extras deben ser mayor que 0')
 
                     axios
                     .post('api/ImpuestosDelMes', {mes: this.mes, anio: this.anio }, { crossdomain: true })
@@ -336,27 +317,28 @@
                       return result;
                 },
                 porFormula(){
-                  let sueldoBaseHorasExtras = (this.sueldoBase < 301000) ? 301000 : this.sueldoBase;
-                  this.sueldoCalculado.montoHorasExtras = 0.0077777 * sueldoBaseHorasExtras * this.horasExtras;
-                  let imponible = ((this.sueldoBase/30*this.diasTrabajados) + (this.bonos/30*this.diasTrabajados))*1 + (this.sueldoCalculado.montoHorasExtras);
+                  
+                  let imponible = ((this.sueldoBase*1) + (this.bonos*1))*1;
 
                   if(this.gratificacionLegal === 1 ){
                       if( imponible * 0.25 > 119146){
-                        this.sueldoCalculado.sueldoBase = (this.sueldoBase/30*this.diasTrabajados) *1;
+                        this.sueldoCalculado.sueldoBase = imponible;
                         this.sueldoCalculado.montoGratificacionLegal = 119146;
                       }else{
-                        this.sueldoCalculado.sueldoBase = (this.sueldoBase/30*this.diasTrabajados)*1 ;
+                        this.sueldoCalculado.sueldoBase = imponible;
                         this.sueldoCalculado.montoGratificacionLegal = imponible * 0.25;
                       }
                   }else{
-                      this.sueldoCalculado.sueldoBase = (this.sueldoBase/30*this.diasTrabajados) ;
+                      this.sueldoCalculado.sueldoBase = imponible;
                       this.sueldoCalculado.montoGratificacionLegal = 0;
                   }
                   
+
+                  imponible = this.sueldoCalculado.sueldoBase + this.sueldoCalculado.montoGratificacionLegal;
                   
-                  imponible = this.sueldoCalculado.sueldoBase + ((this.bonos/30*this.diasTrabajados)*1) +this.sueldoCalculado.montoGratificacionLegal + this.sueldoCalculado.montoHorasExtras;
-                  
-                  this.totalNoImponible = (this.colacion/30*this.diasTrabajados) + (this.movilizacion/30*this.diasTrabajados);
+
+
+                  this.totalNoImponible = (this.colacion*1) + (this.movilizacion*1);
 
                   let Coefcesantia = this.TipoContrato == 2 ? 0 : 0.006;
                         
@@ -369,6 +351,12 @@
                   let limiteAFPSALUD = 2242147;
                   
                   let limiteCesantia = 3366052;
+
+                  console.log("imponible > limiteAFPSALUD", imponible > limiteAFPSALUD)
+
+                  console.log("imponible", imponible)
+
+                  console.log("limiteAFPSALUD", limiteAFPSALUD)
 
                   let montoAfp = ( imponible > limiteAFPSALUD) ? limiteAFPSALUD * coficienteAFP : coficienteAFP * imponible;
 
@@ -408,7 +396,7 @@
 
                 },  // Fin porFormula
                 armarSueldoDesdeImponible(imponible, montoAfp, montoIsapre, montoCesantia, factor, descontar){
-                  //this.sueldoCalculado = null;
+                  this.sueldoCalculado = null;
                   console.log("this.Parametros.UF * this.fun", this.Parametros.UF * this.fun )
                   
                   if(this.fun > 0){
@@ -420,7 +408,7 @@
                   this.sueldoCalculado.cargas = this.cargas;
                   this.sueldoCalculado.nombre_afp = this.PrevisionSeleccionada[1];                  
                   this.sueldoCalculado.noImponible = (this.asignarCargas()*1) + (this.totalNoImponible * 1);
-                  this.sueldoCalculado.imponible = imponible;
+                  this.sueldoCalculado.imponible = (imponible/30) * this.diasTrabajados;
 
                   if(this.diasTrabajados < 25){
                   this.sueldoCalculado.MontoPorCargas = (this.asignarCargas()/30) * this.diasTrabajados;
@@ -429,23 +417,15 @@
                   this.sueldoCalculado.MontoPorCargas = this.asignarCargas();
 
                 }
-
-
-                  this.sueldoCalculado.horasExtras = this.horasExtras;
-
-                  this.sueldoCalculado.diasTrabajados = this.diasTrabajados;
-                  this.sueldoCalculado.pdf = true;
                   this.sueldoCalculado.MontoAfp = montoAfp;
                   this.sueldoCalculado.MontoIsapre = montoIsapre;
                   this.sueldoCalculado.MontoCesantia = montoCesantia;
                   this.sueldoCalculado.impuesto = ((imponible - (montoAfp + montoCesantia + montoIsapre)) * factor) - descontar
-                  this.sueldoCalculado.liquido = (imponible + this.sueldoCalculado.noImponible) - (montoAfp + montoCesantia + montoIsapre + this.sueldoCalculado.impuesto +this.sueldoCalculado.adicionalIsapre ) - this.anticipo;                  
-                  this.sueldoCalculado.anticipo = this.anticipo*1;
+                  this.sueldoCalculado.liquido = (imponible + this.sueldoCalculado.noImponible) - (montoAfp + montoCesantia + montoIsapre + this.sueldoCalculado.impuesto +this.sueldoCalculado.adicionalIsapre );                  
+                  
                   this.sueldoCalculado.montoTributable=(imponible - (montoAfp + montoCesantia + montoIsapre));
                   this.sueldoCalculado.totalHaberes = imponible + this.sueldoCalculado.noImponible;
                   this.sueldoCalculado.totalDescuentos = (montoAfp + montoCesantia + montoIsapre+this.sueldoCalculado.impuesto+this.sueldoCalculado.adicionalIsapre)
-
-                  this.sueldoCalculado.descuentosTotales = (this.sueldoCalculado.totalDescuentos *1) + (this.anticipo*1);
 
                   this.sueldoCalculado.colacion = (this.colacion/30) * this.diasTrabajados
                   this.sueldoCalculado.movilizacion = (this.movilizacion/30) * this.diasTrabajados

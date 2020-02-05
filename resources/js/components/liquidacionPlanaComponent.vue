@@ -114,7 +114,7 @@
       
       </div>
 
-      <div class="col-12 text-center">
+      <div v-if="liquidacion_generada.pdf" class="col-12 text-center">
           <button @click="generarPDF" class="btn btn-primary">Generar PDF</button>
       </div>
     </div>
@@ -363,7 +363,7 @@
         watch:{
           liquidacion_generada: function (newQuestion, oldQuestion) {
              this.liquidacion_generada = newQuestion;
-             console.log("en watch", newQuestion)
+             console.log("en watch", newQuestion);
           }            
         }
     }

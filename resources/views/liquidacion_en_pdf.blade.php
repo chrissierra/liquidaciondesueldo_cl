@@ -161,7 +161,7 @@
                <div class="col-4"  style="border-bottom: 2px solid;">
                   <div class="text-center">
                     <p>Días</p>
-                    <p>30</p>
+                    <p>{{json_decode($modelo->objeto_liquidacion, true)['diasTrabajados']}}</p>
                   </div>
                   <div class="text-center">
                     <p>Cargas</p>
@@ -196,32 +196,12 @@
 
 
 
-                <!-- Comienzan haberes y descuentos, se usará un bucle. -->
-                <!-- Comienzan haberes y descuentos, se usará un bucle. -->
-                <!-- Comienzan haberes y descuentos, se usará un bucle. -->
-                <!-- Comienzan haberes y descuentos, se usará un bucle. -->
+                <!-- Comienzan haberes y descuentos. -->
+                <!-- Comienzan haberes y descuentos. -->
+                <!-- Comienzan haberes y descuentos. -->
+                <!-- Comienzan haberes y descuentos. -->
 
-             <!--   <div class="main-seccion">
-                   <div class="col-4" >
-                      <div class="text-center">
-                        <p>Sueldo Base</p>
-                        <p>Gratificación Legal</p>
-                      </div>
-                      <div class="text-center">
-                         <p>{{ number_format(json_decode($modelo->objeto_liquidacion, true)['sueldoBase'])}}</p>
-                         <p>{{ number_format(json_decode($modelo->objeto_liquidacion, true)['montoGratificacionLegal'])}}</p>
-                      </div>
-                      <div class="text-center">
-                        <p>Salud</p>
-                        <p>AFP</p>
-                      </div>   
 
-                      <div class="text-center">
-                         <p>{{ number_format(json_decode($modelo->objeto_liquidacion, true)['MontoIsapre'])}}</p>
-                         <p>{{ number_format(json_decode($modelo->objeto_liquidacion, true)['MontoAfp'])}}</p>
-                      </div>                                                                      
-                    </div><div class="clearfix"></div>
-                </div> -->
                 
 
               <div class="main-seccion">
@@ -244,79 +224,154 @@
                          <p>{{ number_format(json_decode($modelo->objeto_liquidacion, true)['MontoAfp'])}}</p>
                       </div>                                                                      
                     </div><div class="clearfix"></div>
-                    
-
-                    @if (json_decode($modelo->objeto_liquidacion, true)['bonos'] > 0)
-                    <div class="text-center" style="width:25%; float:left; margin:0">
-                      <p>Bonos</p>
-                    </div>
-                    <div class="text-center" style="width:25%; float:left; margin:0">
-                      <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['bonos'])}}</p>
-                    </div><div class="clearfix-right"></div>
-                    @endif
-                    
-
-                    <div class="clearfix-left"></div>
-                    <div class="text-center" style="width:25%; float:left; margin:0">
-                      <p>Total Imp</p>
-                    </div>
-                    <div class="text-center" style="width:25%; float:left; margin:0">
-                      <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['imponible'])}}</p>
-                    </div><div class="clearfix-right"></div>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-                    @if (json_decode($modelo->objeto_liquidacion, true)['MontoCesantia'] > 0)
-                    <div class="text-center" style="width:25%; float:right; margin:0">
-                       <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['MontoCesantia'])}}</p>
-                    </div>
-                    <div class="text-center" style="width:25%; float:right; margin:0">
-                      <p>Seg. Cesantía</p>                    
-                    </div><div class="clearfix-right"></div>
-                    @endif
-
-
-
-                    @if (json_decode($modelo->objeto_liquidacion, true)['impuesto'] > 0)
-                    <div class="text-center" style="width:25%; float:right; margin:0">
-                       <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['impuesto'])}}</p>
-                    </div>
-                    <div class="text-center" style="width:25%; float:right; margin:0">
-                      <p>Impuesto</p>                    
-                    </div><div class="clearfix-right"></div>
-                    @endif
-
-                    @if (json_decode($modelo->objeto_liquidacion, true)['adicionalIsapre'] > 0)
-                    <div class="text-center" style="width:25%; float:right; margin:0">
-                       <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['adicionalIsapre'])}}</p>
-                    </div>
-                    <div class="text-center" style="width:25%; float:right; margin:0">
-                      <p>Adic. Isapre</p>                    
-                    </div><div class="clearfix-left"></div>
-                    @endif        
 
 
                     
-                    <div class="text-center" style="width:25%; float:right; margin:0">
-                       <p style="font-weight: 800">{{number_format(json_decode($modelo->objeto_liquidacion, true)['totalDescuentos'])}}</p>
+              
+              <div class="LadoHaberes"  style="float:left;width: 50%;">
+              
+                                  @if (isset(json_decode($modelo->objeto_liquidacion, true)['bonos']) && json_decode($modelo->objeto_liquidacion, true)['bonos'] > 0)
+                                  <div class="text-center" style="width:50%; float:left; margin:0">
+                                    <p>Bonos</p>
+                                  </div>
+                                  <div class="text-center" style="width:50%; float:left; margin:0">
+                                    <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['bonos'])}}</p>
+                                  </div><div class="clearfix-right"></div>
+                                  @endif
+                                  
+    
+                                  @if (isset(json_decode($modelo->objeto_liquidacion, true)['montoHorasExtras']) && json_decode($modelo->objeto_liquidacion, true)['montoHorasExtras'] > 0)
+                                  <div class="text-center" style="width:50%; float:left; margin:0">
+                                    <p>Hrs. Extras</p>
+                                  </div>
+                                  <div class="text-center" style="width:50%; float:left; margin:0">
+                                    <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['montoHorasExtras'])}}</p>
+                                  </div><div class="clearfix-right"></div>
+                                  @endif
+
+
+                                  <div class="clearfix-left"></div>
+                                  <div class="text-center" style="width:50%; float:left; margin:0">
+                                    <p style="font-weight: 800">Total Imp</p>
+                                  </div>
+                                  <div class="text-center" style="width:50%; float:left; margin:0">
+                                    <p style="font-weight: 800">{{number_format(json_decode($modelo->objeto_liquidacion, true)['imponible'])}}</p>
+                                  </div><div class="clearfix-right"></div>
+
+
+
+                                  @if (isset(json_decode($modelo->objeto_liquidacion, true)['movilizacion']) && json_decode($modelo->objeto_liquidacion, true)['movilizacion'] > 0)
+                                  <div class="text-center" style="width:50%; float:left; margin:0">
+                                    <p>Movilizacion</p>
+                                  </div>
+                                  <div class="text-center" style="width:50%; float:left; margin:0">
+                                    <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['movilizacion'])}}</p>
+                                  </div><div class="clearfix-right"></div>
+                                  @endif
+
+
+
+                                  @if (isset(json_decode($modelo->objeto_liquidacion, true)['colacion']) && json_decode($modelo->objeto_liquidacion, true)['colacion'] > 0)
+                                  <div class="text-center" style="width:50%; float:left; margin:0">
+                                    <p>Colación</p>
+                                  </div>
+                                  <div class="text-center" style="width:50%; float:left; margin:0">
+                                    <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['colacion'])}}</p>
+                                  </div><div class="clearfix-right"></div>
+                                  @endif 
+
+
+                                  @if (isset(json_decode($modelo->objeto_liquidacion, true)['MontoPorCargas']) && json_decode($modelo->objeto_liquidacion, true)['MontoPorCargas'] > 0)
+                                  <div class="text-center" style="width:50%; float:left; margin:0">
+                                    <p>Monto Cargas</p>
+                                  </div>
+                                  <div class="text-center" style="width:50%; float:left; margin:0">
+                                    <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['MontoPorCargas'])}}</p>
+                                  </div><div class="clearfix-right"></div>
+                                  @endif                                   
+
+
+                                  <div class="clearfix-left"></div>
+                                  <div class="text-center" style="width:50%; float:left; margin:0">
+                                    <p style="font-weight: 800">Total No Imp</p>
+                                  </div>
+                                  <div class="text-center" style="width:50%; float:left; margin:0">
+                                    <p style="font-weight: 800">{{number_format(json_decode($modelo->objeto_liquidacion, true)['noImponible'])}}</p>
+                                  </div><div class="clearfix-right"></div>                                                                                                     
+
+
+              </div>
+
+
+
+
+
+
+
+
+
+
+              <div class="LadoDescuentos" style="float:left;width: 50%;">
+                            @if (json_decode($modelo->objeto_liquidacion, true)['MontoCesantia'] > 0)
+                            <div class="text-center" style="width:50%; float:right; margin:0">
+                               <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['MontoCesantia'])}}</p>
+                            </div>
+                            <div class="text-center" style="width:50%; float:right; margin:0">
+                              <p>Seg. Cesantía</p>                    
+                            </div><div class="clearfix-right"></div>
+                            @endif
+
+
+
+                            @if (json_decode($modelo->objeto_liquidacion, true)['impuesto'] > 0)
+                            <div class="text-center" style="width:50%; float:right; margin:0">
+                               <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['impuesto'])}}</p>
+                            </div>
+                            <div class="text-center" style="width:50%; float:right; margin:0">
+                              <p>Impuesto</p>                    
+                            </div><div class="clearfix-right"></div>
+                            @endif
+
+                            @if (json_decode($modelo->objeto_liquidacion, true)['adicionalIsapre'] > 0)
+                            <div class="text-center" style="width:50%; float:right; margin:0">
+                               <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['adicionalIsapre'])}}</p>
+                            </div>
+                            <div class="text-center" style="width:50%; float:right; margin:0">
+                              <p>Adic. Isapre</p>                    
+                            </div><div class="clearfix-left"></div>
+                            @endif        
+
+
+                            
+                            <div class="text-center" style="width:50%; float:right; margin:0">
+                               <p style="font-weight: 800">{{number_format(json_decode($modelo->objeto_liquidacion, true)['totalDescuentos'])}}</p>
+                            </div>
+                            <div class="text-center" style="width:50%; float:right; margin:0">
+                              <p style="font-weight: 800">Total Dsc Leg</p>                    
+                            </div><div class="clearfix-left"></div>
+
+
+                            @if (isset(json_decode($modelo->objeto_liquidacion, true)['anticipo']) && json_decode($modelo->objeto_liquidacion, true)['anticipo'] > 0)
+                            <div class="text-center" style="width:50%; float:right; margin:0">
+                               <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['anticipo'])}}</p>
+                            </div>
+                            <div class="text-center" style="width:50%; float:right; margin:0">
+                              <p>Anticipo</p>                    
+                            </div><div class="clearfix-left"></div>
+                            @endif    
+
+                          @if (isset(json_decode($modelo->objeto_liquidacion, true)['descuentosTotales']) )
+                            <div class="text-center" style="width:50%; float:right; margin:0">
+                               <p style="font-weight: 800">{{number_format(json_decode($modelo->objeto_liquidacion, true)['descuentosTotales'])}}</p>
+                            </div>
+                            <div class="text-center" style="width:50%; float:right; margin:0">
+                              <p style="font-weight: 800">Total Dsctos</p>                    
+                            </div><div class="clearfix-left"></div>                                                      
+                          @endif                        
+
                     </div>
-                    <div class="text-center" style="width:25%; float:right; margin:0">
-                      <p style="font-weight: 800">Total Dsc Leg</p>                    
-                    </div><div class="clearfix-left"></div>
-                                                     
-
-
                 </div>                
                 <!-- Comienzan haberes y descuentos, se usará un bucle. -->
                 <!-- Comienzan haberes y descuentos, se usará un bucle. -->

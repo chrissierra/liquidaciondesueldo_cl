@@ -15,6 +15,11 @@
           <p class="text-muted subtitulo">
             Desde este formulario podrás llegar al sueldo base que tendría un sueldo líquido dado. Debes ingresar correctamente los datos previsionales de tu trabajador. Debes considerar que la asignación de movilización y colación son haberes no imponibles. 
           </p>
+
+          <p class="text-muted subtitulo">
+           Este formulario deberás utilizarlo como base para armar el sueldo base. No es recomendable usarlo para generar una liquidación
+           real y válida. Es cierto que se pactan sueldos líquidos y sobre eso se podría generar el base y los demás elementos de la liquidación, sin embargo no es lo que debe hacerse. Por ese motivo sólo podrás generar una liquidación en PDF desde un sueldo base a un sueldo líquido. 
+          </p>
         </div>
 
     </div>
@@ -156,9 +161,7 @@
       props:['parametros', 'afp', 'usuario'],
         mounted() {                  
           this.actualizar_fecha();
-          console.log(this.usuario);
-          
-          console.log("Resultado para this.usuario", this.usuario)
+          this.mensajeLiquidoAbase();
         },
         data(){
             return{
@@ -185,7 +188,13 @@
             }
         },  
         methods: {
-            
+                mensajeLiquidoAbase(){
+                  this.$swal({
+                              icon: 'info',
+                              title: 'ATENCIÓN',
+                              text: 'Este formulario deberás utilizarlo como base para armar el sueldo base. No es recomendable usarlo para generar una liquidación real y válida. Por ese motivo sólo podrás generar una liquidación en PDF desde un sueldo base a un sueldo líquido. ',
+                            });
+                },
                 clikeando(e){
                     
                     e.preventDefault();
@@ -195,7 +204,7 @@
                     .post('api/ImpuestosDelMes', {mes:this.mes, anio:this.anio}, { crossdomain: true })
                     .then(response => {
 
-                        let cesantia = this.TipoContrato === 2 ? 0 : 0.006;
+                        let cesantia = this.TipoContrato == 2 ? 0 : 0.006;
                         
                         var coficienteUniversal = 1 - ((this.PrevisionSeleccionada[0]/100) + 0.07 )
                         
@@ -479,6 +488,7 @@
                    this.sueldoCalculado.totalHaberes = imponible + this.sueldoCalculado.noImponible;
                    this.sueldoCalculado.totalDescuentos = (montoAfp + montoCesantia + montoIsapre+this.sueldoCalculado.impuesto+this.sueldoCalculado.adicionalIsapre)
                   this.liquidacion_terminada = true;
+                  this.sueldoCalculado.pdf = false;
                   //this.usuario = (this.usuario == 'invitado') ? 'invitado' : JSON.parse(this.usuario);
                   let usuario = (this.usuario == 'invitado') ? 'invitado' : JSON.parse(this.usuario);
                  
