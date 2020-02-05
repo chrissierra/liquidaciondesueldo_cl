@@ -109,13 +109,13 @@ Route::get('/Descargar_liquidacion/{id}', function ($id) {
 
     //dd($modelo);
 
-    return view('liquidacion_en_pdf', compact('modelo'));
-/*
+    //return view('liquidacion_en_pdf', compact('modelo'));
+
     $pdf = PDF::loadView('liquidacion_en_pdf', compact('modelo'));
 
     return $pdf->download('listado.pdf'); // SÍ USAR
     
-*/
+
 });
 
 Auth::routes();
