@@ -14,6 +14,7 @@ use Barryvdh\DomPDF\Facade as PDF;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
+use \App\ClasesPropias\numero_a_palabras; 
 Route::get('/', function (Request $request) {
 	//parametros_desde_bbdd
 
@@ -112,8 +113,10 @@ Route::get('/Descargar_liquidacion/{id}', function ($id) {
     //return view('liquidacion_en_pdf', compact('modelo'));
 
     // \Dompdf\Options::$isHtml5ParserEnabled
+    $numeroPalabras = new App\ClasesPropias\numero_a_palabras;
+    $liquidoEnPalabras =  $numeroPalabras::convertir(ceil(json_decode($modelo->objeto_liquidacion, true)['liquido']*1), 'Pesos');
 
-    $pdf = PDF::loadView('liquidacion_en_pdf', compact('modelo'));
+    $pdf = PDF::loadView('liquidacion_en_pdf', compact('modelo', 'liquidoEnPalabras'));
 
     return $pdf->stream('listado.pdf'); // SÍ USAR
     

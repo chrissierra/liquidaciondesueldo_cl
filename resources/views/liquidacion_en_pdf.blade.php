@@ -501,7 +501,7 @@
                 </div>
 
                 <div class="borde_inferior"  style="margin-bottom:1em">
-                  SON: SETECIENTOS DIECIOCHO MIL SEISCIENTOS DIECIOCHO PESOS.
+                  SON: {{ $liquidoEnPalabras }}
 
                 </div>
 
