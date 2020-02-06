@@ -18,7 +18,7 @@
 
           <p class="text-muted subtitulo">
            Este formulario deberás utilizarlo como base para armar el sueldo base. No es recomendable usarlo para generar una liquidación
-           real y válida. Es cierto que se pactan sueldos líquidos y sobre eso se podría generar el base y los demás elementos de la liquidación, sin embargo no es lo que debe hacerse. Por ese motivo sólo podrás generar una liquidación en PDF desde un sueldo base a un sueldo líquido. 
+           real y válida. Es cierto que se pactan sueldos líquidos y sobre eso se podría generar el base y los demás elementos de la liquidación, sin embargo no es lo que debe hacerse. Por ese motivo sólo podrás generar una liquidación en PDF desde un sueldo base a un sueldo líquido, en el siguiente <a href="./BaseaLiquido">link</a>. 
           </p>
         </div>
 
@@ -192,7 +192,8 @@
                   this.$swal({
                               icon: 'info',
                               title: 'ATENCIÓN',
-                              text: 'Este formulario deberás utilizarlo como base para armar el sueldo base. No es recomendable usarlo para generar una liquidación real y válida. Por ese motivo sólo podrás generar una liquidación en PDF desde un sueldo base a un sueldo líquido. ',
+                              text: 'Este formulario deberás utilizarlo como base para armar el sueldo base. No es recomendable usarlo para generar una liquidación real y válida. Por ese motivo sólo podrás generar una liquidación en PDF desde un sueldo base a un sueldo líquido en el link inferior. ',
+                              footer:'Sueldo base a líquido y generación de PDF:&nbsp; <a href="./BaseaLiquido">link</a>'
                             });
                 },
                 clikeando(e){

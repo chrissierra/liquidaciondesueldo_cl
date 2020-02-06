@@ -111,9 +111,11 @@ Route::get('/Descargar_liquidacion/{id}', function ($id) {
 
     //return view('liquidacion_en_pdf', compact('modelo'));
 
+    // \Dompdf\Options::$isHtml5ParserEnabled
+
     $pdf = PDF::loadView('liquidacion_en_pdf', compact('modelo'));
 
-    return $pdf->download('listado.pdf'); // SÍ USAR
+    return $pdf->stream('listado.pdf'); // SÍ USAR
     
 
 });

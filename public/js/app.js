@@ -3574,7 +3574,8 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
       this.$swal({
         icon: 'info',
         title: 'ATENCIÓN',
-        text: 'Este formulario deberás utilizarlo como base para armar el sueldo base. No es recomendable usarlo para generar una liquidación real y válida. Por ese motivo sólo podrás generar una liquidación en PDF desde un sueldo base a un sueldo líquido. '
+        text: 'Este formulario deberás utilizarlo como base para armar el sueldo base. No es recomendable usarlo para generar una liquidación real y válida. Por ese motivo sólo podrás generar una liquidación en PDF desde un sueldo base a un sueldo líquido en el link inferior. ',
+        footer: 'Sueldo base a líquido y generación de PDF:&nbsp; <a href="./BaseaLiquido">link</a>'
       });
     },
     clikeando: function clikeando(e) {
@@ -46424,8 +46425,10 @@ var staticRenderFns = [
         _vm._v(" "),
         _c("p", { staticClass: "text-muted subtitulo" }, [
           _vm._v(
-            "\n         Este formulario deberás utilizarlo como base para armar el sueldo base. No es recomendable usarlo para generar una liquidación\n         real y válida. Es cierto que se pactan sueldos líquidos y sobre eso se podría generar el base y los demás elementos de la liquidación, sin embargo no es lo que debe hacerse. Por ese motivo sólo podrás generar una liquidación en PDF desde un sueldo base a un sueldo líquido. \n        "
-          )
+            "\n         Este formulario deberás utilizarlo como base para armar el sueldo base. No es recomendable usarlo para generar una liquidación\n         real y válida. Es cierto que se pactan sueldos líquidos y sobre eso se podría generar el base y los demás elementos de la liquidación, sin embargo no es lo que debe hacerse. Por ese motivo sólo podrás generar una liquidación en PDF desde un sueldo base a un sueldo líquido, en el siguiente "
+          ),
+          _c("a", { attrs: { href: "./BaseaLiquido" } }, [_vm._v("link")]),
+          _vm._v(". \n        ")
         ])
       ])
     ])
