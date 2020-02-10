@@ -1,6 +1,6 @@
         <script src="https://kit.fontawesome.com/761f284d42.js" crossorigin="anonymous"></script>
         <nav class="navbar navbar-expand-lg barra-superior mb-5">
-          <a class="navbar-brand" href="./Inicio">Liquidacion de sueldo</a>
+          <a class="navbar-brand" href="./">Liquidacion de sueldo</a>
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation" >
            <i class="fas fa-bars"></i>
           </button>
@@ -9,7 +9,7 @@
             <ul class="navbar-nav">
             @guest
               <li class="nav-item active">
-                <a class="nav-link" href="./">Descubre el sueldo base <span class="sr-only"></span></a>
+                <a class="nav-link" href="./LiquidoAbase">Descubre el sueldo base <span class="sr-only"></span></a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="./BaseaLiquido">Obtén sueldo líquido</a>
