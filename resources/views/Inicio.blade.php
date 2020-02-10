@@ -20,141 +20,174 @@
         <!-- Fonts -->
         <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">
 	<style type="text/css">
+.banner1::after{
+					content: "";
+					display: block;
+					background-image: url( {{ URL::asset('images/banner1.jpg') }} );
+					height: 70vh;
+					width: 100%;
+					background-repeat: no-repeat;
+					background-size:cover;
+					background-position: center;
+					margin-top:-3rem;
+				}
 
-		.banner1::after{
-			content: "";
-			display: block;
-			background-image: url( {{ URL::asset('images/banner1.jpg') }} );
-			height: 70vh;
-			width: 100%;
-			background-repeat: no-repeat;
-			background-size:cover;
-			background-position: center;
-			margin-top:-3rem;
-		}
+				.banner1{
+					position: relative;
+				}
 
-		.banner1{
-			position: relative;
-		}
+				.banner1::before{
+					height: 70vh;
+					width: 100%;
+					content:'';
+					display: block;
+					background-color: hsla(180, 50%, 10%, .9);
+					position:absolute;
+					
+				}
 
-		.banner1::before{
-			height: 70vh;
-			width: 100%;
-			content:'';
-			display: block;
-			background-color: hsla(180, 50%, 10%, .9);
-			position:absolute;
-			
-		}
 
-		.texto-banner1{
-			position:absolute;
-			top:0;
-			width: 100%;
-			height: 100%;
-			color: white;
-			display: flex;
-			flex-direction: column;
-			justify-content: flex-end;
-			align-items: flex-start;
-			padding-bottom:15em;
-			padding-left: 10em;
+				.titulo-banner1{
+					
+					font-size: 2em;
+					font-family: 'Roboto Mono', sans-serif;
+				}
+				.subtitulo-banner1{
+					font-size:.8em;
+					font-family: 'Roboto Mono', monospace;
+					
+				}
 
-		}
-		.titulo-banner1{
-			
-			font-size: 2em;
-			font-family: 'Roboto Mono', sans-serif;
-		}
-		.subtitulo-banner1{
-			font-size:.8em;
-			font-family: 'Roboto Mono', monospace;
-			
-		}
 
-		p.titulo-principal {
-			font-size: 2.3em;
-			font-family: 'Roboto Mono', monospace;
-			font-weight: 500;
-		}
 
-		p.titulo {
-			font-size: 1.5em;
-			font-family: 'Roboto Mono', monospace;
-			font-weight: 400;
+				p.titulo-principal {
+					font-size: 2.3em;
+					font-family: 'Roboto Mono', monospace;
+					font-weight: 500;
+				}
 
-		}		
+				p.titulo {
+					font-size: 1.5em;
+					font-family: 'Roboto Mono', monospace;
+					font-weight: 400;
 
-		p.subtitulo-contenedor-card{
-			font-size:1.1em;
-			font-family: 'Lato', sans-serif;
-			color: #656979;
-			width: 25em;
-			line-height: 2;
-		}
-		.texto-superior-titulo{
-			color:blue;
-		}
+				}		
 
-		.banner2{
+				p.subtitulo-contenedor-card{
+					font-size:1.1em;
+					font-family: 'Lato', sans-serif;
+					color: #656979;
+					width: 25em;
+					line-height: 2;
+				}
+				.texto-superior-titulo{
+					color:blue;
+				}
 
-			height: 100vh;
-			display: grid;
-			grid-template-columns: 2fr 1fr 1fr;
-			grid-template-rows: 1fr 1fr 1fr;
+
+
+		@media (max-width: 800px) {
+		  .banner2 {
+		    display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
 			padding:2em;
+
+		  }
+
+		  		.texto-banner1{
+					position:absolute;
+					top:0;
+					width: 100%;
+					height: 100%;
+					color: white;
+					display: flex;
+					flex-direction: column;
+					justify-content: flex-end;
+					align-items: flex-start;
+					padding-bottom:15em;
+					padding-left: 2em;
+
+				}
 		}
 
-		.contenedor-card1{
-			grid-column-start:1;
-			grid-column-end: 2;
-			grid-row-start: 1;
-			grid-row-end:2;
-			align-self: end;
-			justify-self: center;
+		@media only screen and (min-width: 992px) {
+
+				
+				.texto-banner1{
+					position:absolute;
+					top:0;
+					width: 100%;
+					height: 100%;
+					color: white;
+					display: flex;
+					flex-direction: column;
+					justify-content: flex-end;
+					align-items: flex-start;
+					padding-bottom:15em;
+					padding-left: 10em;
+
+				}
+				
+
+				.banner2{
+
+					height: 100vh;
+					display: grid;
+					grid-template-columns: 2fr 1fr 1fr;
+					grid-template-rows: 1fr 1fr 1fr;
+					padding:2em;
+				}
+
+				.contenedor-card1{
+					grid-column-start:1;
+					grid-column-end: 2;
+					grid-row-start: 1;
+					grid-row-end:2;
+					align-self: end;
+					justify-self: center;
+				}
+
+				.contenedor-card2{
+					grid-column-start:2;
+					grid-column-end: 3;
+					grid-row-start: 1;
+					grid-row-end:2;
+				}
+
+				.contenedor-card3{
+					grid-column-start:3;
+					grid-column-end: 4;
+					grid-row-start: 1;
+					grid-row-end:2;
+				}
+
+				.contenedor-card4{
+					grid-column-start:2;
+					grid-column-end: 3;
+					grid-row-start: 2;
+					grid-row-end:3;
+				}
+
+				.contenedor-card5{
+					grid-column-start:3;
+					grid-column-end: 4;
+					grid-row-start: 2;
+					grid-row-end:3;
+				}
+
+
+				.contenedor-card6{
+					grid-column-start:2;
+					grid-column-end: 3;
+					grid-row-start: 3;
+					grid-row-end:4;
+				}
+
+				[class*='contenedor-card']{
+					padding:1em;
+				}
+
 		}
-
-		.contenedor-card2{
-			grid-column-start:2;
-			grid-column-end: 3;
-			grid-row-start: 1;
-			grid-row-end:2;
-		}
-
-		.contenedor-card3{
-			grid-column-start:3;
-			grid-column-end: 4;
-			grid-row-start: 1;
-			grid-row-end:2;
-		}
-
-		.contenedor-card4{
-			grid-column-start:2;
-			grid-column-end: 3;
-			grid-row-start: 2;
-			grid-row-end:3;
-		}
-
-		.contenedor-card5{
-			grid-column-start:3;
-			grid-column-end: 4;
-			grid-row-start: 2;
-			grid-row-end:3;
-		}
-
-
-		.contenedor-card6{
-			grid-column-start:2;
-			grid-column-end: 3;
-			grid-row-start: 3;
-			grid-row-end:4;
-		}
-
-		[class*='contenedor-card']{
-			padding:1em;
-		}
-
-
 	</style>
 
     </head>
