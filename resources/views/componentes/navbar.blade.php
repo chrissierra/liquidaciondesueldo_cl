@@ -9,7 +9,7 @@
             <ul class="navbar-nav">
             @guest
               <li class="nav-item active">
-                <a class="nav-link" href="./Inicio">Descubre el sueldo base <span class="sr-only"></span></a>
+                <a class="nav-link" href="./">Descubre el sueldo base <span class="sr-only"></span></a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="./BaseaLiquido">Obtén sueldo líquido</a>
@@ -19,7 +19,7 @@
             @else
                         @if(auth()->user()->rol == 'administrador')
               <li class="nav-item active">
-                <a class="nav-link" href="./Inicio">Descubre el sueldo base <span class="sr-only"></span></a>
+                <a class="nav-link" href="./LiquidoAbase">Descubre el sueldo base <span class="sr-only"></span></a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="./BaseaLiquido">Obtén sueldo líquido</a>

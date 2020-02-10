@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use \App\ClasesPropias\numero_a_palabras; 
-Route::get('/', function (Request $request) {
+Route::get('/LiquidoAbase', function (Request $request) {
 	//parametros_desde_bbdd
 
 	$mes = date("n");
@@ -39,7 +39,7 @@ Route::get('/', function (Request $request) {
 });
 
 
-Route::get('/Inicio', function () {
+Route::get('/', function () {
 	//parametros_desde_bbdd
 
 	SEO::setTitle('Calcular sueldo liquido. Como hacer una liquidacion de sueldo chile');
@@ -108,7 +108,7 @@ Route::get('/Descargar_liquidacion/{id}', function ($id) {
     //return view('liquidacion_en_pdf', compact('modelo'));
 
     // \Dompdf\Options::$isHtml5ParserEnabled
-    if(\App\LiquidacionesRealizadas::with('trabajador.empresa')->where('id', $id)->count() == 0) return redirect('Inicio');
+    if(\App\LiquidacionesRealizadas::with('trabajador.empresa')->where('id', $id)->count() == 0) return redirect('./');
 
     $numeroPalabras = new App\ClasesPropias\numero_a_palabras;
 
