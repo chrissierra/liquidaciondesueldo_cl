@@ -113,7 +113,10 @@ Route::get('/Descargar_liquidacion/{id}', function ($id) {
     //return view('liquidacion_en_pdf', compact('modelo'));
 
     // \Dompdf\Options::$isHtml5ParserEnabled
+    if(\App\LiquidacionesRealizadas::with('trabajador.empresa')->where('id', $id)->count() == 0) return view('Inicio');
+
     $numeroPalabras = new App\ClasesPropias\numero_a_palabras;
+
     $liquidoEnPalabras =  $numeroPalabras::convertir(ceil(json_decode($modelo->objeto_liquidacion, true)['liquido']*1), 'Pesos');
 
     $pdf = PDF::loadView('liquidacion_en_pdf', compact('modelo', 'liquidoEnPalabras'));

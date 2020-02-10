@@ -142,7 +142,7 @@
                   </div>
                   <div class="text-center">
                     <p>C.Costo</p>
-                    <p>Renca</p>
+                    <p>{{ $modelo->trabajador->establecimiento }}</p>
                   </div>                                                                      
                 </div><div class="clearfix"></div>
 
@@ -172,12 +172,12 @@
                   </div>
                   <div class="text-center">
                     <p>Tributable</p>
-                     <p>{{ number_format(json_decode($modelo->objeto_liquidacion, true)['montoTributable']) }}</p>
+                     <p>{{ number_format(json_decode($modelo->objeto_liquidacion, true)['montoTributable'],0, ",", ".") }}</p>
                   </div>   
 
                   <div class="text-center">
                     <p>Imponible</p>
-                     <p>{{ number_format(json_decode($modelo->objeto_liquidacion, true)['imponible']) }}</p>
+                     <p>{{ number_format(json_decode($modelo->objeto_liquidacion, true)['imponible'],0, ",", ".") }}</p>
                   </div>                                                                      
                 </div><div class="clearfix"></div>
 
@@ -242,7 +242,7 @@
                                         <p >Sueldo Base</p>
                                       </div>
                                       <div class="" style="display: inline-block; width: 45%;text-align: right;">
-                                        <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['sueldoBase'])}}</p>
+                                        <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['sueldoBase'],0, ",", ".")}}</p>
                                       </div>
                                   </div>
                                   @endif
@@ -253,7 +253,7 @@
                                         <p >Grat. Legal</p>
                                       </div>
                                       <div class="" style="display: inline-block; width: 45%;text-align: right;">
-                                        <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['montoGratificacionLegal'])}}</p>
+                                        <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['montoGratificacionLegal'],0, ",", ".")}}</p>
                                       </div>
                                   </div>
                                   @endif                                  
@@ -264,7 +264,7 @@
                                         <p >Bonos</p>
                                       </div>
                                       <div class="" style="display: inline-block; width: 45%;text-align: right;">
-                                        <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['bonos'])}}</p>
+                                        <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['bonos'],0, ",", ".")}}</p>
                                       </div>
                                   </div>
                                   @endif
@@ -276,7 +276,7 @@
                                         <p>Hrs. Extras</p>
                                       </div>
                                       <div class="" style="display: inline-block; width: 45%;text-align: right;">
-                                        <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['montoHorasExtras'])}}</p>
+                                        <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['montoHorasExtras'],0, ",", ".")}}</p>
                                       </div>
                                   </div>
                                   @endif
@@ -288,7 +288,7 @@
                                         <p style="font-weight: 800">Total Imp</p>
                                       </div>
                                       <div class=""  style="display: inline-block; width: 45%;text-align: right;">
-                                        <p style="font-weight: 800">{{number_format(json_decode($modelo->objeto_liquidacion, true)['imponible'])}}</p>
+                                        <p style="font-weight: 800">{{number_format(json_decode($modelo->objeto_liquidacion, true)['imponible'],0, ",", ".")}}</p>
                                       </div>
                                 </div>
 
@@ -299,7 +299,7 @@
                                       <p>Movilizacion</p>
                                     </div>
                                     <div class=""  style="display: inline-block; width: 45%;text-align: right;">
-                                      <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['movilizacion'])}}</p>
+                                      <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['movilizacion'],0, ",", ".")}}</p>
                                     </div>
                                   </div>
                                   @endif
@@ -312,7 +312,7 @@
                                         <p>Colación</p>
                                       </div>
                                       <div class=""  style="display: inline-block; width: 45%;text-align: right;">
-                                        <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['colacion'])}}</p>
+                                        <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['colacion'],0, ",", ".")}}</p>
                                       </div>
                                   </div>
                                   @endif 
@@ -325,7 +325,7 @@
                                           <p>Monto Cargas</p>
                                         </div>
                                         <div class=""  style="display: inline-block; width: 45%;text-align: right;">
-                                          <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['MontoPorCargas'])}}</p>
+                                          <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['MontoPorCargas'],0, ",", ".")}}</p>
                                         </div>
                                   </div>
                                   @endif                                   
@@ -337,7 +337,7 @@
                                         <p style="font-weight: 800">Total No Imp</p>
                                       </div>
                                       <div class="" style="display: inline-block; width: 45%;text-align: right;" >
-                                        <p style="font-weight: 800">{{number_format(json_decode($modelo->objeto_liquidacion, true)['noImponible'])}}</p>
+                                        <p style="font-weight: 800">{{number_format(json_decode($modelo->objeto_liquidacion, true)['noImponible'],0, ",", ".")}}</p>
                                       </div>    
                                   </div>                                                                                                 
 
@@ -363,7 +363,7 @@
                                   <p>Salud</p>  
                                 </div>
                                 <div class=""  style="display: inline-block; width: 45%;text-align: right;" >
-                                   <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['MontoIsapre'])}}</p>
+                                   <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['MontoIsapre'],0, ",", ".")}}</p>
                                                     
                                 </div>
                             </div>
@@ -377,7 +377,7 @@
                                   <p>AFP</p>  
                                 </div>
                                 <div class=""  style="display: inline-block; width: 45%;text-align: right;" >
-                                   <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['MontoAfp'])}}</p>
+                                   <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['MontoAfp'],0, ",", ".")}}</p>
                                                     
                                 </div>
                             </div>
@@ -390,7 +390,7 @@
                                   <p>Seg. Cesantía</p>  
                                 </div>
                                 <div class=""  style="display: inline-block; width: 45%;text-align: right;" >
-                                   <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['MontoCesantia'])}}</p>
+                                   <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['MontoCesantia'],0, ",", ".")}}</p>
                                                     
                                 </div>
                             </div>
@@ -404,7 +404,7 @@
                                 <p>Impuesto</p>                    
                               </div>
                               <div class=""  style="display: inline-block; width: 45%;text-align: right;" >
-                                 <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['impuesto'])}}</p>
+                                 <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['impuesto'],0, ",", ".")}}</p>
                               </div>
                             </div>
                             @endif
@@ -415,7 +415,7 @@
                                   <p>Adic. Isapre</p>                    
                                 </div>
                                 <div class=""  style="display: inline-block; width: 45%;text-align: right;" >
-                                   <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['adicionalIsapre'])}}</p>
+                                   <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['adicionalIsapre'],0, ",", ".")}}</p>
                                 </div>
                             </div>
                             @endif        
@@ -426,7 +426,7 @@
                                 <p style="font-weight: 800">Total Dsc Leg</p>                    
                               </div>
                               <div class=""  style="display: inline-block; width: 45%;text-align: right;" >
-                                 <p style="font-weight: 800">{{number_format(json_decode($modelo->objeto_liquidacion, true)['totalDescuentos'])}}</p>
+                                 <p style="font-weight: 800">{{number_format(json_decode($modelo->objeto_liquidacion, true)['totalDescuentos'],0, ",", ".")}}</p>
                               </div>
                             </div>
 
@@ -436,7 +436,7 @@
                                   <p>Anticipo</p>                    
                                 </div>
                                 <div class=""  style="display: inline-block; width: 45%;text-align: right;" >
-                                   <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['anticipo'])}}</p>
+                                   <p>{{number_format(json_decode($modelo->objeto_liquidacion, true)['anticipo'],0, ",", ".")}}</p>
                                 </div>
                             </div>
                             @endif    
@@ -447,7 +447,7 @@
                               <p style="font-weight: 800">Total Dsctos</p>                    
                             </div>
                             <div class=""  style="display: inline-block; width: 45%;text-align: right;" >
-                               <p style="font-weight: 800">{{number_format(json_decode($modelo->objeto_liquidacion, true)['descuentosTotales'])}}</p>
+                               <p style="font-weight: 800">{{number_format(json_decode($modelo->objeto_liquidacion, true)['descuentosTotales'],0, ",", ".")}}</p>
                             </div>                                                      
                           </div>
                           @endif                        
@@ -495,7 +495,7 @@
 
                       <div class="text-center">
                         <p>{{cal_days_in_month(CAL_GREGORIAN, $modelo->mes, $modelo->anio)}}/{{ $modelo->mes }}/{{ $modelo->anio }}</p>
-                        <p>{{ number_format(json_decode($modelo->objeto_liquidacion, true)['liquido'] )}}</p>
+                        <p>{{ number_format(ceil(json_decode($modelo->objeto_liquidacion, true)['liquido']), 0, ",", ".")  }}</p>
                       </div>                                                                      
                     </div><div class="clearfix"></div>
                 </div>
