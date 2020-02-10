@@ -51,12 +51,7 @@ Route::get('/Inicio', function () {
 
 	$mes = date("n");
 
-    return view('liquidoabase')
-    ->with("parametros_desde_bbdd", App\table_parametro::All())
-	    ->with("afps", App\afp::where('mes', $mes)
-	    ->select('Provida', 'Capital', 'Cuprum', 'PlanVital', 'Uno', 'IPS', 'Modelo', 'Habitat')
-	    ->first()->toJson()
-	);
+    return view('Inicio');
 });
 
 
@@ -113,7 +108,7 @@ Route::get('/Descargar_liquidacion/{id}', function ($id) {
     //return view('liquidacion_en_pdf', compact('modelo'));
 
     // \Dompdf\Options::$isHtml5ParserEnabled
-    if(\App\LiquidacionesRealizadas::with('trabajador.empresa')->where('id', $id)->count() == 0) return view('Inicio');
+    if(\App\LiquidacionesRealizadas::with('trabajador.empresa')->where('id', $id)->count() == 0) return redirect('Inicio');
 
     $numeroPalabras = new App\ClasesPropias\numero_a_palabras;
 
